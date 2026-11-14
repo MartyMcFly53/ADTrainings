@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,6 +30,55 @@
 </head>
 <body>
 
+    <div id="login-screen" style="
+position:fixed;
+inset:0;
+background:#0b0f19;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+    <h1 style="color:#fff;margin-bottom:20px;">Dart Training Hub</h1>
+
+    <input
+        type="password"
+        id="password"
+        placeholder="Passwort eingeben"
+        style="
+            width:250px;
+            padding:12px;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            text-align:center;
+        "
+    >
+
+    <button
+        onclick="login()"
+        style="
+            margin-top:12px;
+            padding:12px 20px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:bold;
+        "
+    >
+        Anmelden
+    </button>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("password").addEventListener("keydown", e => {
+        if (e.key === "Enter") login();
+    });
+});
+</script>
+</div>
+
+<div id="app" style="display:none;">
     <header>
         <div class="logo-area">
             <img src="cowtails-logo-vectorize.svg" alt="Cowtails Logo" class="club-logo" onerror="this.style.display='none'">
@@ -77,6 +127,30 @@
     <div id="flashMessage" class="flash-message"></div>
 
     <script>
+        function login() {
+    const password = document.getElementById("password").value;
+
+    if (password === "Cowtails2026") {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        sessionStorage.setItem("loggedIn", "true");
+    } else {
+        alert("Falsches Passwort");
+    }
+}
+
+window.addEventListener("load", () => {
+    if (sessionStorage.getItem("loggedIn") === "true") {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("password").addEventListener("keydown", e => {
+        if (e.key === "Enter") login();
+    });
+});
         function changeBoardIp() {
             const currentIp = localStorage.getItem("autodarts_ip") || "192.168.2.91";
             const newIp = prompt("Gib die IP-Adresse deines Autodarts Boardmanagers ein:", currentIp);
