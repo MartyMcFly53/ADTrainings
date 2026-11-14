@@ -1,19 +1,28 @@
 "use strict";
 
 /* ==========================================
-   A1 DRILL - Vollständiger Code mit IP-Konfiguration
+   A1 DRILL - Mit Zwei-Bedingungen-Takeout & Chronologischer Neuberechnung
 ========================================== */
 
-// 1. Standard-IP laden oder Fallback auf localhost setzen
 let boardIp = localStorage.getItem("autodarts_ip") || "192.168.2.91";
-
-// 2. WebSocket mit dynamischer IP verbinden (Zentrale Instanz)
 const ws = new WebSocket(`ws://${boardIp}:3180/api/events`);
 let lastNumThrows = 0;
 
-ws.onopen = () => console.log("A1 Drill verbunden mit IP:", boardIp);
+ws.onopen = () => {
+    console.log("A1 Drill verbunden mit IP:", boardIp);
+    updateBoardStatusUI("ready", false);
+};
+
 ws.onerror = (err) => console.error("WS Fehler:", err);
-ws.onclose = () => console.log("Vision getrennt");
+
+ws.onclose = () => {
+    console.log("Vision getrennt");
+    const badge = document.getElementById("boardStatusBadge");
+    if (badge) {
+        badge.textContent = "🔴 Board getrennt";
+        badge.className = "status-takeout";
+    }
+};
 
 ws.onmessage = (msg) => {
     if (gameState.gameFinished) return;
@@ -23,22 +32,19 @@ ws.onmessage = (msg) => {
     if (event.type === "state") {
         const data = event.data;
         const throws = data.throws || [];
-        const status = data.status; // z.B. "waitingForThrow", "takeout", "throw", etc.
+        const status = data.status;
 
-        // WICHTIG: Wenn wir auf Takeout gewartet haben, aber das Board leer ist oder wieder bereit,
-        // schalten wir Sofort auf Grün um!
+        // Takeout-Prüfung nach dem Zwei-Bedingungen-Prinzip:
+        // Erst wenn 3 Darts geworfen wurden (waitingForTakeout === true) UND das Board physisch leer ist (throws.length === 0),
+        // wird die Aufnahme offiziell abgeschlossen und zum nächsten Ziel gewechselt.
         if (gameState.waitingForTakeout) {
-            if (throws.length === 0 || status === "takeout" || status === "waitingForThrow" || status === "ready" || status === "idle") {
-                // Wenn das Board jetzt leer ist, beenden wir den Takeout-Wartemodus sofort
-                if (throws.length === 0) {
-                    gameState.waitingForTakeout = false;
-                    lastNumThrows = 0;
-                    proceedToNextActiveTarget();
-                }
+            if (throws.length === 0) {
+                gameState.waitingForTakeout = false;
+                lastNumThrows = 0;
+                finalizeCompletedTurnAndAdvance();
             }
         }
 
-        // Status-Badge in Echtzeit aktualisieren (berücksichtigt auch das direkte Leeren des Boards)
         updateBoardStatusUI(status, gameState.waitingForTakeout);
 
         if (gameState.waitingForTakeout) {
@@ -91,33 +97,29 @@ function updateBoardStatusUI(status, isWaitingTakeout) {
     if (!badge) return;
 
     if (isWaitingTakeout || status === "takeout") {
-        badge.textContent = "🎯 Bitte Pfeile ziehen (Takeout)";
+        badge.textContent = "🎯 Bitte Pfeile ziehen";
         badge.className = "status-takeout";
     } 
-    else if (status === "throw" || status === "throwDetected" || status === "waitingForThrow" || status === "ready" || status === "idle") {
-        badge.textContent = "🟢 Bereit zum Werfen";
+    else if (["throw", "throwDetected", "waitingForThrow", "ready", "idle"].includes(status)) {
+        badge.textContent = "🟢 Board: Bereit";
         badge.className = "status-ready";
     } 
     else {
-        badge.textContent = `⚡ Status: ${status || "Verbunden"}`;
+        badge.textContent = `🟢 Board: Verbunden`;
         badge.className = "status-ready";
     }
 }
 
 function resetAutodartsBoard() {
-    fetch(`http://${boardIp}:3180/api/reset`, {
-        method: "POST"
-    })
+    fetch(`http://${boardIp}:3180/api/reset`, { method: "POST" })
     .then(response => {
         if (response.ok) {
             showFlash("Board erfolgreich zurückgesetzt!");
         } else {
-            console.warn("Reset-Befehl gesendet.");
             showFlash("Board-Reset ausgelöst.");
         }
     })
-    .catch(err => {
-        console.error("Fehler beim Board-Reset:", err);
+    .catch(() => {
         fetch(`http://${boardIp}:3180/api/command?cmd=reset`, { mode: 'no-cors' }).catch(() => {});
         showFlash("Board-Reset gesendet.");
     });
@@ -159,7 +161,6 @@ function abortCurrentGame() {
 function processStateEvent(data) {
     const throws = data.throws;
     if (!Array.isArray(throws)) return;
-
     if (gameState.waitingForTakeout) return;
 
     if (throws.length < lastNumThrows) {
@@ -230,6 +231,8 @@ function isTargetHit(hit, targetIndex) {
 }
 
 function registerThrow(hit) {
+    if (gameState.waitingForTakeout || gameState.gameFinished) return;
+
     gameState.totalDarts++;
     gameState.currentTurnThrowsCount++;
 
@@ -255,18 +258,15 @@ function registerThrow(hit) {
         timestamp: Date.now()
     });
 
-    if (gameState.throws.length > 100) {
-        gameState.throws.shift();
-    }
-
     if (gameState.currentTurnThrowsCount >= 3) {
         gameState.waitingForTakeout = true;
+        showFlash("Aufnahme beendet – Bitte Pfeile ziehen");
     }
 
     updateUIAll();
 }
 
-function proceedToNextActiveTarget() {
+function finalizeCompletedTurnAndAdvance() {
     const currentTarget = getCurrentTarget();
     if (gameState.turnHitsCount >= 2) {
         if (gameState.roundsCompleted[currentTarget] < 5) {
@@ -565,7 +565,6 @@ function setupUndoButton() {
 
 function undoLastThrow() {
     if (gameState.throws.length === 0) return;
-
     gameState.throws.pop();
     recalculateGameFromScratch();
     showFlash("Wurf zurückgenommen");
@@ -575,7 +574,6 @@ let selectedThrowId = null;
 
 function openCorrectionModal(throwId, currentValue) {
     selectedThrowId = throwId;
-    
     const selectElem = document.getElementById("correctionSelect");
     if (selectElem) {
         selectElem.value = currentValue || "MISS";
@@ -594,7 +592,6 @@ function closeCorrectionModal() {
 
 function saveCorrection() {
     if (!selectedThrowId) return;
-
     const selectElem = document.getElementById("correctionSelect");
     if (!selectElem) return;
 
@@ -608,6 +605,9 @@ function saveCorrection() {
     recalculateGameFromScratch();
 }
 
+// ==========================================
+// VOLLSTÄNDIGE CHRONOLOGISCHE NEUBERECHNUNG
+// ==========================================
 function recalculateGameFromScratch() {
     gameState.roundsCompleted = { 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, BULL: 0 };
     gameState.score = 0;
@@ -673,6 +673,7 @@ function recalculateGameFromScratch() {
     gameState.currentTurnThrowsCount = currentTurn;
     gameState.turnHitsCount = turnHits;
 
+    // Wenn genau 3 Darts in der Aufnahme sind, aktivieren wir den Takeout-Wartemodus
     if (currentTurn === 0 && savedThrows.length > 0 && savedThrows.length % 3 === 0) {
         gameState.waitingForTakeout = true;
     } else {

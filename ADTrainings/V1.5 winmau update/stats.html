@@ -1,56 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Darts Statistik</title>
-
-  <!-- Arcade Style -->
+  <title>Segmenttraining Statistik - Autodarts</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- Chart.js für Diagramme -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
   <div class="app">
 
-    <h1>STATISTIK</h1>
-    <p class="subtitle">Highscores • Verlauf • Trainingshistorie</p>
+    <!-- Header im einheitlichen Hub-Design -->
+    <header class="module-header">
+      <h1>SEGMENT STATISTIK</h1>
+      <p class="subtitle">Highscores • Verlauf • Trainingshistorie</p>
 
-    <button onclick="goBack()">Zurück</button>
-
-    <button onclick="resetStats()">Statistik löschen</button>
-
+      <div class="header-actions">
+        <button class="hdr-btn btn-home" onclick="window.location.href='index.html'">🎯 Zurück zum Spiel</button>
+        <button class="hdr-btn btn-reset" onclick="resetStats()">🗑️ Statistik löschen</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
 
     <!-- FILTER & SORTIERUNG -->
     <div class="filter-bar">
-      <!-- Filter Ziel -->
       <select id="filterTarget">
         <option value="all">Alle Ziele</option>
       </select>
 
-      <!-- Filter Pfeile -->
       <select id="filterDarts">
         <option value="all">Alle Pfeile</option>
       </select>
 
-      <!-- Sortierung -->
       <select id="sortBy">
-        <option value="score">Score</option>
-        <option value="hitrate">Trefferquote</option>
-        <option value="threeAvg">3‑Dart‑Average</option>
+        <option value="score">Sortieren: Score</option>
+        <option value="hitrate">Sortieren: Trefferquote</option>
+        <option value="threeAvg">Sortieren: 3‑Dart‑Average</option>
       </select>
     </div>
 
     <!-- DIAGRAMM -->
-    <canvas id="scoreChart" height="120"></canvas>
+    <div class="stat-card" style="margin-bottom: 24px; padding: 20px;">
+      <canvas id="scoreChart" height="100"></canvas>
+    </div>
 
     <!-- HIGH SCORE LISTE -->
     <div id="history"></div>
 
   </div>
 
-  <!-- Statistik Logik -->
   <script src="stats.js"></script>
 </body>
 </html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>JDC Challenge - Autodarts</title>
+  <link rel="stylesheet" href="jdc.css">
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- Header im einheitlichen Hub-Design -->
+    <header class="module-header">
+      <h1>JDC CHALLENGE</h1>
+      <p class="subtitle">Shanghai 10–15 • Doubles 1–20 + Bull • Shanghai 15–20</p>
+
+      <div class="header-actions">
+        <div id="boardStatusBadge" class="status-ready">🟢 Board: Verbindet...</div>
+        <button class="hdr-btn btn-reset" onclick="resetAutodartsBoard()">🔄 Board Reset</button>
+        <button class="hdr-btn btn-abort" onclick="abortTraining()">❌ Training abbrechen</button>
+        <button class="hdr-btn btn-ip" onclick="changeBoardIp()">⚙️ IP</button>
+        <button class="hdr-btn btn-stats" onclick="openStats()">📊 JDC Statistik</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
+
+    <!-- Start Button -->
+    <button class="start-btn" id="startBtn" onclick="startGame()">JDC Challenge starten</button>
+
+    <!-- Oberes Grid: Score | Aktuelles Ziel (A1-Drill-Style) | Shirt-Stufe -->
+    <div class="top-grid" id="mainGameGrid" style="display: none;">
+      
+      <!-- Linke Spalte: Score & Teilergebnisse -->
+      <div class="stat-card column-card">
+        <div class="stat-label">GESAMTSCORE</div>
+        <div class="stat-value highlight-score" id="score">0</div>
+        
+        <div class="sub-stats-grid">
+          <div class="sub-stat-box">
+            <div class="stat-label">Teil 1 (S10-15)</div>
+            <div class="stat-value" id="part1Score" style="font-size: 20px;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">Teil 2 (Doubles)</div>
+            <div class="stat-value" id="part2Score" style="font-size: 20px;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">Teil 3 (S15-20)</div>
+            <div class="stat-value" id="part3Score" style="font-size: 20px;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mitte: Aktuelles Ziel (Im A1-Drill-Design) -->
+      <div class="stat-card target-display-card">
+        <div class="stat-label" id="partTitleBadge" style="color: #00e5ff; font-weight: 700; margin-bottom: 8px;">TEIL 1: SHANGHAI 10–15</div>
+        <div class="target-huge" id="currentTargetPath">10</div>
+        <div class="target-sub-info" id="targetInstruction">Aufnahme 1 / 19</div>
+      </div>
+
+      <!-- Rechte Spalte: Shirt-Stufe & Einordnung -->
+      <div class="stat-card column-card">
+        <div class="stat-label">SHIRT-STUFE</div>
+        <div class="stat-value" id="shirtLevel" style="font-size: 24px; color: #cbd5e1; margin-top: 15px;">Weiß (White)</div>
+        <div class="stat-label" id="shirtInfo" style="margin-top: 8px; color: #8ca1b3;">Einsteiger (0–149 Pkt.)</div>
+      </div>
+
+    </div>
+
+    <!-- Die 3 Wurf-Karten unten (Interaktiv & korrigierbar) -->
+    <div class="throws-grid" id="lastThrows">
+      <div class="stat-card"><div class="stat-label">Pfeil 1</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 2</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 3</div><div class="stat-value">-</div></div>
+    </div>
+
+  </div>
+
+  <!-- Korrektur-Modal -->
+  <div id="correctionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Wurf korrigieren</h3>
+      <p>Wähle das tatsächliche Segment:</p>
+      <select id="correctionSelect"></select>
+      <div class="modal-actions">
+        <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+        <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash Message -->
+  <div id="flashMessage" class="flash-message"></div>
+
+  <!-- Session Beendet Modal -->
+  <div id="sessionFinishedModal" class="modal hidden">
+    <div class="modal-content modal-wide">
+      <h2 style="color: #00ffa2;">JDC Challenge Beendet!</h2>
+      <p id="modalResultText"></p>
+      <button class="btn-save" style="width: 100%; margin-top: 12px;" onclick="location.reload()">Neue Challenge starten</button>
+    </div>
+  </div>
+
+  <script src="jdc.js"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch 40 - Autodarts</title>
+  <link rel="stylesheet" href="catch40.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header im einheitlichen Hub-Design -->
+    <header class="module-header">
+      <h1>CATCH 40</h1>
+      <p class="subtitle">Checkouts 61 bis 100 • Max. 6 Darts pro Zahl • Max. 120 Punkte</p>
+
+      <div class="header-actions">
+        <div id="boardStatusBadge" class="status-ready">🟢 Board: Verbindet...</div>
+        <button class="hdr-btn btn-reset" onclick="resetAutodartsBoard()">🔄 Board Reset</button>
+        <button class="hdr-btn btn-abort" onclick="abortTraining()">❌ Training abbrechen</button>
+        <button class="hdr-btn btn-stats" onclick="window.location.href='catch40-stats.html'">📊 Statistik</button>
+        <button class="hdr-btn btn-ip" onclick="changeBoardIp()">⚙️ IP</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
+
+    <!-- Haupt-Grid im 121-Checkout-Stil -->
+    <div class="top-grid">
+
+      <!-- Links: Catch 40 Score & Einstufung -->
+      <div class="stat-card column-card">
+        <div class="stat-label">CATCH 40 PUNKTE</div>
+        <div class="stat-value highlight-score"><span id="totalPoints">0</span> <span style="font-size: 20px; color: #8ca1b3;">/ 120</span></div>
+        <div class="level-badge" id="levelBadge">Einsteiger (0–19 Pkt.)</div>
+
+        <div class="sub-stats-grid">
+          <div class="sub-stat-box">
+            <div class="stat-label">3 Pkt.</div>
+            <div class="stat-value" id="count3Pts" style="font-size: 18px; color: #00ffa2;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">2 Pkt.</div>
+            <div class="stat-value" id="count2Pts" style="font-size: 18px; color: #00e5ff;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">1 Pkt.</div>
+            <div class="stat-value" id="count1Pts" style="font-size: 18px; color: #ffc107;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mitte: Restscore & Checkout-Weg -->
+      <div class="stat-card target-display-card">
+        <div class="stat-label" id="targetHeaderLabel" style="color: #00e5ff; font-weight: 700;">ZIEL 1 / 40 • START: 61</div>
+        <div class="target-huge" id="remainingScore">61</div>
+        <div class="checkout-route" id="checkoutSuggestion">T15 D8</div>
+        <div class="target-sub-info" id="visitInfo">Aufnahme 1 / 2 • Dart 1 / 6</div>
+      </div>
+
+      <!-- Rechts: Quote & Fortschritt -->
+      <div class="stat-card column-card">
+        <div class="stat-label">CHECKOUT-QUOTE</div>
+        <div class="stat-value" id="checkoutRate" style="font-size: 34px; color: #00e5ff; margin-top: 8px;">0.0%</div>
+        <div class="stat-label" id="checkoutCountText" style="margin-top: 4px;">0 / 0 gecheckt</div>
+
+        <div class="sub-stats-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="sub-stat-box">
+            <div class="stat-label">Doppel-Quote</div>
+            <div class="stat-value" id="doubleRate" style="font-size: 18px;">0.0%</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">Ø Pkt./Ziel</div>
+            <div class="stat-value" id="avgPoints" style="font-size: 18px;">0.00</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3 Interaktive Wurf-Karten (aktuelle Aufnahme) -->
+    <div class="section-title">AKTUELLE AUFNAHME (Klick zum Korrigieren)</div>
+    <div class="throws-grid" id="lastThrows">
+      <div class="stat-card"><div class="stat-label">Pfeil 1</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 2</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 3</div><div class="stat-value">-</div></div>
+    </div>
+
+    <!-- Kompakte Übersicht der letzten Checkouts -->
+    <div class="section-title" style="margin-top: 24px;">LETZTE ERGEBNISSE</div>
+    <div id="recentHistory" class="recent-history-bar">
+      <span style="color: #8ca1b3; font-size: 13px;">Noch keine Checkouts abgeschlossen.</span>
+    </div>
+
+  </div>
+
+  <!-- Korrektur-Modal -->
+  <div id="correctionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Wurf korrigieren</h3>
+      <p>Wähle das tatsächliche Segment:</p>
+      <select id="correctionSelect"></select>
+      <div class="modal-actions">
+        <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+        <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash Message -->
+  <div id="flashMessage" class="flash-message"></div>
+
+  <!-- Session Beendet Modal -->
+  <div id="sessionFinishedModal" class="modal hidden">
+    <div class="modal-content" style="width: 400px;">
+      <h2 style="color: #00ffa2; margin-bottom: 12px;">Catch 40 Beendet! 🎯</h2>
+      <p id="modalResultText"></p>
+      <div class="modal-actions" style="margin-top: 18px;">
+        <button class="btn-save" onclick="location.reload()">Nochmal spielen</button>
+        <button class="btn-cancel" style="border: 1px solid #00e5ff; color: #00e5ff;" onclick="window.location.href='catch40-stats.html'">Zur Statistik</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="catch40.js"></script>
+</body>
+</html>
