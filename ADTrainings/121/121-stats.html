@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>121 Checkout Statistik</title>
+    <link rel="stylesheet" href="121.css">
+    <style>
+        .stats-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 800px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .kpi-card {
+            background: #131926;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+        .kpi-title {
+            font-size: 12px;
+            color: #8ca1b3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 14px;
+        }
+        th {
+            color: #8ca1b3;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .rank-1 { color: #ffd700; font-weight: bold; }
+        .rank-2 { color: #e2e8f0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>121 STATISTIK</h1>
+        <p class="subtitle">Langzeit-Auswertung • Abgeschlossene 20-Legs Einheiten</p>
+        <div class="status-control-container">
+            <button id="a1LinkBtn" onclick="window.location.href='121.html'">
+                🎯 Zurück zum 121 Training
+            </button>
+            <button id="resetBoardBtn" onclick="clear121History()">
+                🗑️ Statistik löschen
+            </button>
+        </div>
+    </header>
+
+    <main class="stats-container">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Gespielte Einheiten</div>
+                <div class="kpi-value cyan" id="kpiSessions">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ø Checkout-Quote (Legs)</div>
+                <div class="kpi-value green" id="kpiAvgCheckout">0.0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ø Doppel-Quote (Darts)</div>
+                <div class="kpi-value cyan" id="kpiAvgDouble">0.0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Rekord-Finish</div>
+                <div class="kpi-value green" id="kpiBestFinish">-</div>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="panel-title">TOP 10 BESTENLISTE (SORTIERT NACH CHECKOUT-QUOTE)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Datum</th>
+                        <th>Gecheckte Legs</th>
+                        <th>Checkout-Quote</th>
+                        <th>Doppel-Quote</th>
+                        <th>Höchstes Finish</th>
+                        <th>End-Score</th>
+                    </tr>
+                </thead>
+                <tbody id="highscoreTableBody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function load121Stats() {
+            const history = JSON.parse(localStorage.getItem("checkout121History") || "[]");
+
+            document.getElementById("kpiSessions").textContent = history.length;
+
+            if (history.length > 0) {
+                const avgCheckout = history.reduce((sum, s) => sum + s.checkoutRate, 0) / history.length;
+                const avgDouble = history.reduce((sum, s) => sum + (s.doubleDartRate || 0), 0) / history.length;
+                const bestFinish = Math.max(...history.map(s => s.highestCheckout || 0));
+
+                document.getElementById("kpiAvgCheckout").textContent = `${avgCheckout.toFixed(1)}%`;
+                document.getElementById("kpiAvgDouble").textContent = `${avgDouble.toFixed(1)}%`;
+                document.getElementById("kpiBestFinish").textContent = bestFinish > 0 ? bestFinish : "-";
+            }
+
+            const tbody = document.getElementById("highscoreTableBody");
+            tbody.innerHTML = "";
+
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#8ca1b3; padding:24px;">Noch keine abgeschlossenen 20-Legs Einheiten vorhanden.</td></tr>`;
+                return;
+            }
+
+            history.slice(0, 10).forEach((entry, idx) => {
+                const tr = document.createElement("tr");
+                const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+                tr.innerHTML = `
+                    <td class="${rankClass}">#${idx + 1}</td>
+                    <td>${entry.date}</td>
+                    <td>${entry.legsWon} / ${entry.totalLegs}</td>
+                    <td style="color:#00ffa2; font-weight:bold;">${entry.checkoutRate.toFixed(1)}%</td>
+                    <td style="color:#00e5ff;">${(entry.doubleDartRate || 0).toFixed(1)}%</td>
+                    <td>${entry.highestCheckout || "-"}</td>
+                    <td>${entry.endLevel}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clear121History() {
+            if (confirm("Wirklich alle gespeicherten 121-Checkout-Statistiken löschen?")) {
+                localStorage.removeItem("checkout121History");
+                load121Stats();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", load121Stats);
+    </script>
+</body>
+</html>

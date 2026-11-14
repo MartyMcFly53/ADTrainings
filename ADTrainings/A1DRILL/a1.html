@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1 Drill</title>
+    <link rel="stylesheet" href="a1.css">
+    <style>
+        .modal {
+            display: flex;
+        }
+        .modal.hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SPIELENDE MODAL -->
+<div id="gameFinishedModal" class="modal hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000;">
+    <div class="modal-content" style="background:#161c27; padding:30px; border-radius:12px; width:90%; max-width:450px; text-align:center; border:1px solid rgba(255,255,255,0.1); color:#fff;">
+        <h2 style="color:#00e5ff; margin-bottom:15px;">Drill beendet! 🎯</h2>
+        <p id="modalResultText" style="font-size:18px; margin-bottom:20px;"></p>
+        
+        <h3 style="margin-bottom:10px; font-size:16px; color:#8ca1b3;">Top 10 Highscores (Wenigste Darts)</h3>
+        <div id="modalHighscoreList" style="text-align:left; background:#111620; padding:10px; border-radius:8px; margin-bottom:20px; max-height:180px; overflow-y:auto;">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+
+        <div class="modal-buttons" style="display:flex; gap:10px; justify-content:center;">
+            <button onclick="location.reload()" style="padding:10px 20px; background:#00e5ff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Nochmal spielen</button>
+            <button onclick="window.location.href='stats.html'" style="padding:10px 20px; background:#1f2738; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; font-weight:bold; cursor:pointer;">Zur Gesamt-Statistik</button>
+        </div>
+    </div>
+</div>
+
+<div class="app">
+
+    <div id="flashMessage" class="flash-message">
+        SEGMENT GESCHAFFT
+    </div>
+
+<header>
+        <h1>A1 DRILL</h1>
+        <p class="subtitle">
+            15 → 16 → 17 → 18 → 19 → 20 → Bull
+        </p>
+        <div class="status-control-container">
+            <div id="boardStatusBadge" class="status-ready">
+                🟢 Bereit zum Werfen
+            </div>
+            <button id="resetBoardBtn" onclick="resetAutodartsBoard()">
+                🔄 Board Reset
+            </button>
+            <!-- NEU: Spiel abbrechen / Neu starten -->
+            <button id="abortGameBtn" onclick="abortCurrentGame()" style="background: #192233; color: #ff9800; border: 1px solid rgba(255,152,0,0.35); cursor: pointer;">
+                ❌ Training abbrechen
+            </button>
+            <button id="statsLinkBtn" onclick="window.location.href='stats.html'">
+                📊 Statistik
+            </button>
+            <button id="configIpBtn" onclick="changeBoardIp()" style="background: #192233; color: #8ca1b3; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;">
+    ⚙️ IP
+</button>
+<button id="a1LinkBtn" onclick="window.location.href='../index.html'" style="background: #141b29; color: #00e5ff; border: 1px solid rgba(0,229,255,0.45); cursor: pointer;">
+    🏠 Startseite
+</button>
+
+        </div>
+    </header>
+
+    <section class="top-grid">
+
+        <!-- SCORE -->
+        <div class="panel">
+            <div class="panel-title">SCORE</div>
+            <div id="score" class="big-number">0</div>
+            <div class="stats-grid">
+                <div class="mini-stat">
+                    <span>Singles</span>
+                    <strong id="singleCount">0</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Doubles</span>
+                    <strong id="doubleCount">0</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Triples</span>
+                    <strong id="tripleCount">0</strong>
+                </div>
+                <div class="mini-stat misses">
+                    <span>Misses</span>
+                    <strong id="missCount">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- AKTUELLES ZIEL -->
+        <div class="panel">
+            <div class="panel-title">AKTUELLES ZIEL</div>
+            <div id="currentTarget" class="target-number">15</div>
+            <div class="target-section">
+                <div class="label">Treffer dieser Runde</div>
+                <div id="roundHitText" class="value">0 / 2</div>
+                <div class="progress-bar">
+                    <div id="roundHitBar"></div>
+                </div>
+            </div>
+            <div class="target-section">
+                <div class="label">Erfolgreiche Runden</div>
+                <div id="roundProgressText" class="value">0 / 5</div>
+                <div class="progress-bar">
+                    <div id="roundProgressBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GESAMTPROGRESS -->
+        <div class="panel">
+            <div class="panel-title">PROGRESS</div>
+            <div id="progressList">
+                <!-- Dynamisch -->
+            </div>
+        </div>
+
+    </section>
+
+    <!-- LETZTE WÜRFE -->
+    <section class="throws-section">
+        <div class="section-title">LETZTE WÜRFE</div>
+        <div id="lastThrows" class="throws-grid">
+            <!-- Dynamisch -->
+        </div>
+    </section>
+
+    <section class="bottom-grid">
+        <div class="panel small-panel">
+            <div class="panel-title">Trefferquote</div>
+            <div id="hitRate" class="large-stat">0%</div>
+        </div>
+        <div class="panel small-panel">
+            <div class="panel-title">3 Dart Average</div>
+            <div id="threeAvg" class="large-stat">0.0</div>
+        </div>
+        <div class="panel small-panel">
+            <div class="panel-title">Gesamtwürfe</div>
+            <div id="totalDarts" class="large-stat">0</div>
+        </div>
+    </section>
+
+</div>
+
+<!-- KORREKTUR MODAL -->
+<div id="correctionModal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Wurf korrigieren</h2>
+        <select id="correctionSelect" style="width: 100%; padding: 12px; border-radius: 10px; background: #1e2638; color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 16px; margin-bottom: 15px;">
+            <option value="MISS">MISS</option>
+            <option value="S15">S15</option>
+            <option value="D15">D15</option>
+            <option value="T15">T15</option>
+            <option value="S16">S16</option>
+            <option value="D16">D16</option>
+            <option value="T16">T16</option>
+            <option value="S17">S17</option>
+            <option value="D17">D17</option>
+            <option value="T17">T17</option>
+            <option value="S18">S18</option>
+            <option value="D18">D18</option>
+            <option value="T18">T18</option>
+            <option value="S19">S19</option>
+            <option value="D19">D19</option>
+            <option value="T19">T19</option>
+            <option value="S20">S20</option>
+            <option value="D20">D20</option>
+            <option value="T20">T20</option>
+            <option value="SBULL">SBULL</option>
+            <option value="DBULL">DBULL</option>
+        </select>
+        <div class="modal-buttons">
+            <button id="saveCorrectionBtn">Speichern</button>
+            <button id="cancelCorrectionBtn" style="background: #1f2738; color: #00e5ff; border: 1px solid #00e5ff;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<script src="a1.js"></script>
+
+</body>
+</html>

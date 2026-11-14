@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Segmenttraining - Autodarts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- Header im exakten 121-Design -->
+    <header class="module-header">
+      <h1>SEGMENTTRAINING</h1>
+      <p class="subtitle">Target • Score • Arrows • Live from Autodarts</p>
+
+      <div class="header-actions">
+        <div id="boardStatusBadge" class="status-ready">🟢 Board: Verbindet...</div>
+        <button class="hdr-btn btn-reset" onclick="resetAutodartsBoard()">🔄 Board Reset</button>
+        <button class="hdr-btn btn-abort" onclick="abortTraining()">❌ Training abbrechen</button>
+        <button class="hdr-btn btn-ip" onclick="changeBoardIp()">⚙️ IP</button>
+        <button class="hdr-btn btn-stats" onclick="openStats()">📊 Segment Statistik</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
+
+    <!-- Einstellungen & Start -->
+    <div class="control-group">
+      <div class="control">
+        <label>Zielzahl</label>
+        <input id="target" type="number" value="20" min="1" max="25">
+      </div>
+      <div class="control">
+        <label>Pfeile</label>
+        <input id="darts" type="number" value="30" min="3" step="3">
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">Start Training</button>
+
+    <!-- Hauptstats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="score">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Arrows left</div>
+        <div class="stat-value" id="left">0</div>
+      </div>
+    </div>
+
+    <!-- Die 3 Wurf-Karten (Grün/Cyan bei Treffer, Rot bei Fehlwurf, jederzeit anklickbar) -->
+    <div class="throws-grid" id="lastThrows"></div>
+
+    <!-- Singles / Doubles / Triples / Misses -->
+    <div class="stats hits-stats">
+      <div class="stat-card">
+        <div class="stat-label">Singles</div>
+        <div class="stat-value" id="singleCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Doubles</div>
+        <div class="stat-value" id="doubleCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Triples</div>
+        <div class="stat-value" id="tripleCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Misses</div>
+        <div class="stat-value" id="missCount">0</div>
+      </div>
+    </div>
+
+    <!-- Trefferquote / 3DA -->
+    <div class="stats-footer">
+      <div class="stats" style="margin-bottom: 14px;">
+        <div class="stat-card">
+          <div class="stat-label">Trefferquote</div>
+          <div class="stat-value" id="hitRate">0.0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">3‑Dart‑Average</div>
+          <div class="stat-value" id="threeAvg">0.0</div>
+        </div>
+      </div>
+
+      <!-- Trefferquote Balken -->
+      <div class="hitrate-bar">
+        <div id="hitrate-fill"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Korrektur-Modal -->
+  <div id="correctionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Wurf korrigieren</h3>
+      <p>Wähle das tatsächliche Segment:</p>
+      <select id="correctionSelect"></select>
+      <div class="modal-actions">
+        <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+        <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash Message -->
+  <div id="flashMessage" class="flash-message"></div>
+
+  <!-- Session Beendet Modal -->
+  <div id="sessionFinishedModal" class="modal hidden">
+    <div class="modal-content modal-wide">
+      <h2>Training Beendet!</h2>
+      <p id="modalResultText"></p>
+      <button class="btn-save" style="width: 100%; margin-top: 12px;" onclick="closeFinishModal()">Neues Training starten</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

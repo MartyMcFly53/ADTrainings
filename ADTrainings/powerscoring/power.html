@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Scoring - Autodarts</title>
+    <link rel="stylesheet" href="power.css">
+</head>
+<body>
+
+    <div id="flashMessage" class="flash-message"></div>
+
+    <header>
+        <h1>POWER SCORING</h1>
+        <p class="subtitle">Scoring-Training • 10 Aufnahmen (30 Darts) • Autodarts</p>
+
+        <div class="status-control-container">
+            <div id="boardStatusBadge" class="status-ready">
+                Board: Verbindet...
+            </div>
+            <button id="resetBoardBtn" onclick="resetAutodartsBoard()">
+                🔄 Board Reset
+            </button>
+            <button id="abortGameBtn" onclick="resetPowerSession()">
+                ❌ Training Abbrechen
+            </button>
+            <button id="configIpBtn" onclick="changeBoardIp()">
+                ⚙️ IP
+            </button>
+            <button id="statsPowerBtn" onclick="window.location.href='power-stats.html'">
+                📊 Statistik
+            </button>
+            <button id="a1LinkBtn" onclick="window.location.href='../index.html'">
+    🏠 Startseite
+            </button>
+        </div>
+
+        <div class="action-bar">
+            <button id="undoBtn" onclick="undoLastThrow()">⌫ Letzten Wurf zurücknehmen</button>
+        </div>
+    </header>
+
+    <main class="scolia-main">
+        <!-- 1. Oben: Gesamtscore -->
+        <div class="scolia-total-score-container">
+            <div class="scolia-total-score" id="totalScore">0</div>
+        </div>
+
+        <!-- 2. Die 10 Runden mit Hintergrundbalken (0 bis 180) -->
+        <div class="scolia-rounds-grid" id="scoliaRoundsGrid">
+            <!-- Wird dynamisch von JS befüllt -->
+        </div>
+
+        <!-- 3. Die 3 aktuellen Würfe -->
+        <div class="scolia-throws-grid" id="lastThrows">
+            <!-- Wird dynamisch von JS befüllt -->
+        </div>
+
+        <!-- 4. Durchschnitt -->
+        <div class="scolia-avg-container">
+            <span>Durchschnitt: </span><span id="averageDisplay" class="cyan">0.0</span>
+        </div>
+
+        <!-- 5. Schnellstatistik unten (Heute / Monat / Alle Zeiten) -->
+        <div class="scolia-footer-stats">
+            <div class="footer-stat-box">
+                <div class="footer-stat-label">Heute</div>
+                <div class="footer-stat-val" id="statToday">0</div>
+            </div>
+            <div class="footer-stat-box">
+                <div class="footer-stat-label" id="statMonthLabel">Monat</div>
+                <div class="footer-stat-val" id="statMonth">0</div>
+            </div>
+            <div class="footer-stat-box">
+                <div class="footer-stat-label">Alle Zeiten</div>
+                <div class="footer-stat-val" id="statAllTime">0</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Korrektur-Modal -->
+    <div id="correctionModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Wurf korrigieren</h3>
+            <p>Wähle das tatsächliche Segment:</p>
+            <select id="correctionSelect"></select>
+            <div class="modal-actions">
+                <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+                <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abschluss-Modal nach 10 Aufnahmen -->
+    <div id="sessionFinishedModal" class="modal hidden">
+        <div class="modal-content modal-wide">
+            <h2>🏆 10 AUFNAHMEN BEENDET!</h2>
+            <p id="modalResultText" class="modal-summary-text"></p>
+            <div class="modal-hs-title">TOP 10 BESTENLISTE (POWER SCORING)</div>
+            <div id="modalHighscoreList" class="modal-hs-list"></div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button onclick="startNewPowerSession()" class="btn-save">Neue Einheit</button>
+                <button onclick="window.location.href='power-stats.html'" class="btn-stats">Langzeit-Statistik</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="power.js"></script>
+</body>
+</html>

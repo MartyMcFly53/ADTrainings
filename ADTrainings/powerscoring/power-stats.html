@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Scoring Statistik</title>
+    <link rel="stylesheet" href="power.css">
+    <style>
+        .stats-container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 800px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .kpi-card {
+            background: #131926;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+        }
+        .kpi-title {
+            font-size: 11px;
+            color: #8ca1b3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+        .green { color: #00ffa2; }
+        .stats-panel {
+            background: #131926;
+            border: 1px solid rgba(0, 229, 255, 0.12);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .panel-title {
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 14px;
+        }
+        th {
+            color: #8ca1b3;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .rank-1 { color: #ffd700; font-weight: bold; }
+        .rank-2 { color: #e2e8f0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header style="text-align: center; margin-bottom: 28px;">
+        <h1 style="font-size: 38px; font-weight: 800; letter-spacing: 2px; color: #00e5ff; text-shadow: 0 0 20px rgba(0, 229, 255, 0.45);">
+            POWER SCORING STATISTIK
+        </h1>
+        <p style="color: #8ca1b3; font-size: 14px; margin-top: 6px;">
+            Langzeit-Auswertung • Abgeschlossene 30-Dart Einheiten
+        </p>
+        <div class="status-control-container" style="margin-top: 18px;">
+            <button id="a1LinkBtn" onclick="window.location.href='power.html'">
+                🎯 Zurück zum Power Scoring
+            </button>
+            <button id="resetBoardBtn" onclick="clearPowerHistory()">
+                🗑️ Statistik löschen
+            </button>
+        </div>
+    </header>
+
+    <main class="stats-container">
+        <!-- 4 Haupt-Kennzahlen -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Gespielte Einheiten</div>
+                <div class="kpi-value cyan" id="kpiSessions">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ø Gesamtscore</div>
+                <div class="kpi-value green" id="kpiAvgScore">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ø 3-Dart Average</div>
+                <div class="kpi-value cyan" id="kpiAvgAverage">0.0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Highscore (Alle Zeiten)</div>
+                <div class="kpi-value green" id="kpiBestScore">-</div>
+            </div>
+        </div>
+
+        <!-- Schnell-Rekorde (Heute / Aktueller Monat / Alle Zeiten) -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="kpi-card">
+                <div class="kpi-title">Bestwert Heute</div>
+                <div class="kpi-value" id="kpiBestToday" style="color: #fff;">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title" id="kpiMonthTitle">Bestwert Monat</div>
+                <div class="kpi-value" id="kpiBestMonth" style="color: #fff;">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Gesamt-Triples</div>
+                <div class="kpi-value cyan" id="kpiTotalTriples">0</div>
+            </div>
+        </div>
+
+        <!-- Top 10 Bestenliste -->
+        <section class="stats-panel">
+            <div class="panel-title">TOP 10 BESTENLISTE (POWER SCORING)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Datum</th>
+                        <th>Gesamtscore</th>
+                        <th>3-Dart Average</th>
+                        <th>Triples</th>
+                    </tr>
+                </thead>
+                <tbody id="highscoreTableBody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function loadPowerStats() {
+            const history = JSON.parse(localStorage.getItem("powerScoringHistory") || "[]");
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const todayStr = now.toLocaleDateString();
+
+            const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+            document.getElementById("kpiMonthTitle").textContent = `Bestwert ${monthNames[currentMonth]}`;
+
+            document.getElementById("kpiSessions").textContent = history.length;
+
+            if (history.length > 0) {
+                const avgScore = history.reduce((sum, s) => sum + s.totalScore, 0) / history.length;
+                const avgAvg = history.reduce((sum, s) => sum + s.average, 0) / history.length;
+                const bestScore = Math.max(...history.map(s => s.totalScore));
+                const totalTriples = history.reduce((sum, s) => sum + (s.triples || 0), 0);
+
+                document.getElementById("kpiAvgScore").textContent = avgScore.toFixed(0);
+                document.getElementById("kpiAvgAverage").textContent = avgAvg.toFixed(1);
+                document.getElementById("kpiBestScore").textContent = bestScore;
+                document.getElementById("kpiTotalTriples").textContent = totalTriples;
+
+                const todayEntries = history.filter(s => new Date(s.timestamp || s.date).toLocaleDateString() === todayStr);
+                if (todayEntries.length > 0) {
+                    document.getElementById("kpiBestToday").textContent = Math.max(...todayEntries.map(s => s.totalScore));
+                } else {
+                    document.getElementById("kpiBestToday").textContent = "0";
+                }
+
+                const monthEntries = history.filter(s => {
+                    const d = new Date(s.timestamp || s.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                });
+                if (monthEntries.length > 0) {
+                    document.getElementById("kpiBestMonth").textContent = Math.max(...monthEntries.map(s => s.totalScore));
+                } else {
+                    document.getElementById("kpiBestMonth").textContent = "0";
+                }
+            } else {
+                document.getElementById("kpiAvgScore").textContent = "0";
+                document.getElementById("kpiAvgAverage").textContent = "0.0";
+                document.getElementById("kpiBestScore").textContent = "-";
+                document.getElementById("kpiBestToday").textContent = "0";
+                document.getElementById("kpiBestMonth").textContent = "0";
+                document.getElementById("kpiTotalTriples").textContent = "0";
+            }
+
+            const tbody = document.getElementById("highscoreTableBody");
+            tbody.innerHTML = "";
+
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#8ca1b3; padding:24px;">Noch keine abgeschlossenen Power Scoring Einheiten vorhanden.</td></tr>`;
+                return;
+            }
+
+            history.slice(0, 10).forEach((entry, idx) => {
+                const tr = document.createElement("tr");
+                const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+                tr.innerHTML = `
+                    <td class="${rankClass}">#${idx + 1}</td>
+                    <td>${entry.date}</td>
+                    <td style="color:#00ffa2; font-weight:bold;">${entry.totalScore} Pkt.</td>
+                    <td style="color:#00e5ff;">${entry.average.toFixed(1)}</td>
+                    <td>${entry.triples || 0}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearPowerHistory() {
+            if (confirm("Wirklich alle gespeicherten Power Scoring Statistiken löschen?")) {
+                localStorage.removeItem("powerScoringHistory");
+                loadPowerStats();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadPowerStats);
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dart Training Hub - Autodarts</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #0b0f19; color: #e2e8f0; min-height: 100vh; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; max-width: 960px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; background: #131926; border: 1px solid rgba(255, 255, 255, 0.08); padding: 18px 26px; border-radius: 16px; }
+        .logo-area { display: flex; align-items: center; gap: 18px; }
+        .club-logo { height: 56px; max-width: 160px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.35)); }
+        .hub-title h1 { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
+        .hub-title p { font-size: 13px; color: #8ca1b3; }
+        #configIpBtn { height: 40px; padding: 0 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; background: #192233; color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.2); transition: 0.2s; }
+        #configIpBtn:hover { border-color: #00e5ff; color: #00e5ff; }
+        .modules-grid { width: 100%; max-width: 960px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .module-card { background: #131926; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 28px 22px; text-decoration: none; color: inherit; display: flex; flex-direction: column; justify-content: space-between; transition: 0.25s ease; }
+        .module-card:hover { transform: translateY(-4px); border-color: #00e5ff; box-shadow: 0 10px 30px rgba(0, 229, 255, 0.15); }
+        .module-card h2 { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+        .module-card.power h2 { color: #00ffa2; }
+        .module-card.checkout h2 { color: #00e5ff; }
+        .module-card.drill h2 { color: #ff6565; }
+        .module-card.segment h2 { color: #ffc107; }
+        .module-card p { font-size: 13px; color: #8ca1b3; line-height: 1.5; margin-bottom: 22px; }
+        .module-action { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .flash-message { display: none; position: fixed; top: 24px; left: 50%; transform: translateX(-50%); background: #00e5ff; color: #0b0f19; font-weight: 800; padding: 12px 26px; border-radius: 999px; box-shadow: 0 0 25px rgba(0, 229, 255, 0.6); z-index: 999; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <img src="cowtails-logo-vectorize.svg" alt="Cowtails Logo" class="club-logo" onerror="this.style.display='none'">
+            <div class="hub-title">
+                <h1>Dart Training Hub</h1>
+                <p>Autodarts Integration</p>
+            </div>
+        </div>
+        <button id="configIpBtn" onclick="changeBoardIp()">⚙️ Board IP konfigurieren</button>
+    </header>
+
+    <div class="modules-grid">
+        <a href="powerscoring/power.html" class="module-card power">
+            <div>
+                <h2>Power Scoring</h2>
+                <p>10 Aufnahmen à 3 Darts im Scolia-Layout (0–180 Punkte) inkl. Live-Balken und Bestenliste.</p>
+            </div>
+            <div class="module-action" style="color: #00ffa2;">Modul starten →</div>
+        </a>
+
+        <a href="121/121.html" class="module-card checkout">
+            <div>
+                <h2>121 Checkout Solo</h2>
+                <p>20 Legs von 121 herunterspielen. Trainiere High-Checkouts, Doppel-Quoten und Wege.</p>
+            </div>
+            <div class="module-action" style="color: #00e5ff;">Modul starten →</div>
+        </a>
+
+        <a href="A1DRILL/a1.html" class="module-card drill">
+            <div>
+                <h2>A1 Drill</h2>
+                <p>Präzisions- und Segment-Training mit Korrektur- und Takeout-Standard.</p>
+            </div>
+            <div class="module-action" style="color: #ff6565;">Modul starten →</div>
+        </a>
+
+        <a href="V1.5 winmau update/index.html" class="module-card segment">
+            <div>
+                <h2>Segmenttraining</h2>
+                <p>Gezieltes Wurftraining auf frei wählbare Zahlen (z. B. 30 Darts auf 20) mit Trefferquote.</p>
+            </div>
+            <div class="module-action" style="color: #ffc107;">Modul starten →</div>
+        </a>
+    </div>
+
+    <div id="flashMessage" class="flash-message"></div>
+
+    <script>
+        function changeBoardIp() {
+            const currentIp = localStorage.getItem("autodarts_ip") || "192.168.2.91";
+            const newIp = prompt("Gib die IP-Adresse deines Autodarts Boardmanagers ein:", currentIp);
+            if (newIp && newIp.trim() !== "") {
+                localStorage.setItem("autodarts_ip", newIp.trim());
+                showFlash("IP erfolgreich gespeichert!");
+            }
+        }
+        function showFlash(text) {
+            const flash = document.getElementById("flashMessage");
+            flash.textContent = text;
+            flash.style.display = "block";
+            clearTimeout(flash._timer);
+            flash._timer = setTimeout(() => { flash.style.display = "none"; }, 1800);
+        }
+    </script>
+</body>
+</html>

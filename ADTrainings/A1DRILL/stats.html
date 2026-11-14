@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>A1 Drill - Statistik & Highscores</title>
+    <style>
+        body {
+            background-color: #0b0f17;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+        h1 {
+            color: #00e5ff;
+            margin: 0;
+            font-size: 24px;
+        }
+        .btn {
+            background: #1f2738;
+            color: #00e5ff;
+            border: 1px solid #00e5ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #00e5ff;
+            color: #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #161c27;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+        }
+        th {
+            background: #1f2738;
+            color: #8ca1b3;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        tr:not(:last-child) td {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        tr:hover {
+            background: rgba(0,229,255,0.03);
+        }
+        .rank-1 { color: #ffd700; font-weight: bold; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #8ca1b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏆 A1 Drill - Bestenliste & Historie</h1>
+        <a href="a1.html" class="btn">Zum Training</a>
+    </header>
+
+    <table id="statsTable">
+        <thead>
+            <tr>
+                <th style="width: 80px;">Rang</th>
+                <th>Datum & Uhrzeit</th>
+                <th>Wenigste Darts</th>
+                <th>Trefferquote</th>
+            </tr>
+        </thead>
+        <tbody id="statsTableBody">
+            <!-- Dynamisch gefüllt -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tbody = document.getElementById("statsTableBody");
+        const history = JSON.parse(localStorage.getItem("a1History") || "[]");
+
+        if (history.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Noch keine Spiele absolviert. Starte deinen ersten A1 Drill!</td></tr>`;
+            return;
+        }
+
+        // Sortieren nach wenigsten Darts (aufsteigend)
+        history.sort((a, b) => a.totalDarts - b.totalDarts);
+
+        history.forEach((game, index) => {
+            const row = document.createElement("tr");
+            
+            let rankClass = "";
+            if (index === 0) rankClass = "rank-1";
+            else if (index === 1) rankClass = "rank-2";
+            else if (index === 2) rankClass = "rank-3";
+
+            row.innerHTML = `
+                <td class="${rankClass}">#${index + 1}</td>
+                <td>${game.date}</td>
+                <td><b>${game.totalDarts}</b> Darts</td>
+                <td>${game.hitRate}%</td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+</script>
+
+</body>
+</html>

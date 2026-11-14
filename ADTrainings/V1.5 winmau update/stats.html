@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Darts Statistik</title>
+
+  <!-- Arcade Style -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js für Diagramme -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="app">
+
+    <h1>STATISTIK</h1>
+    <p class="subtitle">Highscores • Verlauf • Trainingshistorie</p>
+
+    <button onclick="goBack()">Zurück</button>
+
+    <button onclick="resetStats()">Statistik löschen</button>
+
+
+    <!-- FILTER & SORTIERUNG -->
+    <div class="filter-bar">
+      <!-- Filter Ziel -->
+      <select id="filterTarget">
+        <option value="all">Alle Ziele</option>
+      </select>
+
+      <!-- Filter Pfeile -->
+      <select id="filterDarts">
+        <option value="all">Alle Pfeile</option>
+      </select>
+
+      <!-- Sortierung -->
+      <select id="sortBy">
+        <option value="score">Score</option>
+        <option value="hitrate">Trefferquote</option>
+        <option value="threeAvg">3‑Dart‑Average</option>
+      </select>
+    </div>
+
+    <!-- DIAGRAMM -->
+    <canvas id="scoreChart" height="120"></canvas>
+
+    <!-- HIGH SCORE LISTE -->
+    <div id="history"></div>
+
+  </div>
+
+  <!-- Statistik Logik -->
+  <script src="stats.js"></script>
+</body>
+</html>

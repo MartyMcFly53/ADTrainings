@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>121 Checkout Solo (20 Legs) - Autodarts</title>
+    <link rel="stylesheet" href="121.css">
+</head>
+<body>
+
+    <div id="flashMessage" class="flash-message"></div>
+
+    <header>
+        <h1>121 CHECKOUT</h1>
+        <p class="subtitle">Solo Finish-Training • 20 Legs • 9 Darts • Double Out</p>
+
+        <div class="status-control-container">
+            <div id="boardStatusBadge" class="status-ready">
+                Board: Verbindet...
+            </div>
+            <button id="resetBoardBtn" onclick="resetAutodartsBoard()">
+                🔄 Board Reset
+            </button>
+            <button id="abortGameBtn" onclick="resetSession()">
+                ❌ Training abbrechen
+            </button>
+            <button id="configIpBtn" onclick="changeBoardIp()">
+                ⚙️ IP
+            </button>
+            <button id="stats121Btn" onclick="window.location.href='121-stats.html'">
+                📊 121 Statistik
+            </button>
+            <button id="a1LinkBtn" onclick="window.location.href='../index.html'">
+    🏠 Startseite
+            </button>
+        </div>
+
+        <div class="action-bar">
+            <button id="undoBtn" onclick="undoLastThrow()">⌫ Letzten Wurf zurücknehmen</button>
+            <div class="leg-counter-badge" id="legCounterBadge">Leg 1 / 20</div>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Linkes Panel: Session-Statistiken -->
+        <section class="panel">
+            <div class="panel-title">SESSION CHECKOUT-QUOTE (LEGS)</div>
+            <div class="big-number cyan" id="checkoutRate">0.0%</div>
+            <div class="sub-label" id="playerLevelBadge">Niveau: Noch keine Legs gespielt</div>
+
+            <div class="mini-grid">
+                <div class="mini-box">
+                    <span class="mini-label">Aktuelles Ziel</span>
+                    <span class="mini-val cyan" id="currentLevelTarget">121</span>
+                </div>
+                <div class="mini-box">
+                    <span class="mini-label">Höchstes Finish</span>
+                    <span class="mini-val green" id="highestCheckout">-</span>
+                </div>
+                <div class="mini-box">
+                    <span class="mini-label">Gecheckt / Gescheitert</span>
+                    <span class="mini-val"><span class="green" id="legsWon">0</span> / <span class="red" id="legsLost">0</span></span>
+                </div>
+                <div class="mini-box">
+                    <span class="mini-label">Doppel-Quote (Darts)</span>
+                    <span class="mini-val cyan" id="doubleDartRate">0.0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mittleres Panel: Aktueller Restscore & Checkout-Weg -->
+        <section class="panel center-panel">
+            <div class="panel-title">RESTSCORE</div>
+            <div class="target-display" id="remainingScore">121</div>
+            <div class="checkout-guide" id="checkoutGuide">T20 • T11 • D14</div>
+
+            <div class="progress-group">
+                <div class="progress-header">
+                    <span>Verfügbare Darts im Leg</span>
+                    <span id="dartsLeftText">9 / 9 Darts (Aufnahme 1/3)</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="dartsLeftBar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rechtes Panel: Leg-Verlauf / Aufnahmen -->
+        <section class="panel">
+            <div class="panel-title">AUFNAHMEN IM LEG</div>
+            <div class="visit-list" id="visitList"></div>
+
+            <div class="level-reference">
+                <div class="ref-title">Richtwerte Checkout-Quote</div>
+                <div class="ref-row"><span>Anfänger</span><span>10 – 20 %</span></div>
+                <div class="ref-row"><span>Guter Kneipenspieler</span><span>25 – 35 %</span></div>
+                <div class="ref-row"><span>Vereins-/Ligaspieler</span><span>40 – 50 %</span></div>
+                <div class="ref-row"><span>Profispieler</span><span>&gt; 60 %</span></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Aktuelle Aufnahme (3 Pfeile zum Anklicken & Korrigieren) -->
+    <section class="throws-section">
+        <div class="section-title">AKTUELLE AUFNAHME (Klick zum Korrigieren)</div>
+        <div class="throws-grid" id="lastThrows"></div>
+    </section>
+
+    <!-- Korrektur-Modal -->
+    <div id="correctionModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Wurf korrigieren</h3>
+            <p>Wähle das tatsächliche Segment:</p>
+            <select id="correctionSelect"></select>
+            <div class="modal-actions">
+                <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+                <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abschluss-Modal nach 20 Legs -->
+    <div id="sessionFinishedModal" class="modal hidden">
+        <div class="modal-content modal-wide">
+            <h2>🏆 20 LEGS ABGESCHLOSSEN!</h2>
+            <p id="modalResultText" class="modal-summary-text"></p>
+            <div class="modal-hs-title">TOP 10 BESTENLISTE (121 SOLO)</div>
+            <div id="modalHighscoreList" class="modal-hs-list"></div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button onclick="startNewSessionAfterFinish()" class="btn-save">Neue 20-Legs Einheit</button>
+                <button onclick="window.location.href='121-stats.html'" class="btn-stats">Zur Statistik-Seite</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="121.js"></script>
+</body>
+</html>
