@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Castle Builder Statistik - Autodarts</title>
   <link rel="stylesheet" href="castle.css">
 </head>
@@ -9,11 +10,11 @@
   <div class="app">
 
     <header class="module-header">
-      <h1>🏰 BURG-CHRONIK & STATISTIK</h1>
-      <p class="subtitle">Überlebte Belagerungen • Stabilitäts-Highscores</p>
+      <h1>🏰 BURG-CHRONIK & BESTENLISTE</h1>
+      <p class="subtitle">Errichtete Festungen • Überstandene Belagerungen</p>
 
       <div class="header-actions">
-        <button class="hdr-btn btn-home" onclick="window.location.href='castle.html'">🏰 Zurück zum Bau</button>
+        <button class="hdr-btn btn-home" onclick="window.location.href='castle.html'">🏰 Zurück zum Burgbau</button>
         <button class="hdr-btn btn-reset" onclick="resetStats()">🗑️ Chronik löschen</button>
         <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
       </div>
@@ -29,33 +30,45 @@
         let history = JSON.parse(localStorage.getItem("castleHistory") || "[]");
 
         if (history.length === 0) {
-            container.innerHTML = "<div class='stat-card' style='color: #8ca1b3; margin-top: 30px;'>Noch keine Burgbelagerung aufgezeichnet.</div>";
+            container.innerHTML = "<div class='stat-card' style='color: #8ca1b3; margin-top: 30px;'>Noch keine Burg gebaut. Starte deine erste Herausforderung!</div>";
             return;
         }
 
-        // Nach Stabilität absteigend sortieren
-        history.sort((a, b) => b.stability - a.stability);
+        // Nach erreichten Burgpunkten absteigend sortieren
+        history.sort((a, b) => (b.score || 0) - (a.score || 0));
 
         history.forEach((entry, index) => {
             const div = document.createElement("div");
             div.className = "stat-card";
             div.style.cssText = "margin-bottom: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;";
 
-            const color = entry.stability >= 70 ? "#00ffa2" : entry.stability >= 50 ? "#ffc107" : "#ff6565";
+            // Saubere Fallbacks, falls noch ein alter Eintrag im Speicher liegt
+            const difficulty = entry.difficulty || "Anfänger";
+            const attacker = entry.attacker || "Goblins";
+            const score = entry.score ?? 0;
+            const targetScore = entry.targetScore || 350;
+            const stability = entry.stability ?? 0;
+            const survived = entry.survived !== undefined ? entry.survived : stability >= 70;
+
+            const statusColor = survived ? "#00ffa2" : "#ff6565";
+            const statusText = survived ? "🛡️ Belagerung überlebt" : "💥 Burg eingestürzt";
+            const stabColor = stability >= 90 ? "#00ffa2" : (stability >= 70 ? "#00e5ff" : (stability >= 50 ? "#ffc107" : "#ff6565"));
 
             div.innerHTML = `
                 <div>
                     <div style="font-size: 13px; font-weight: 700; color: #00e5ff; margin-bottom: 4px;">
-                        #${index + 1} — ${entry.date} • <span style="color: #ffc107;">Modus: ${entry.difficulty} (${entry.attacker})</span>
+                        #${index + 1} — ${entry.date || "Unbekanntes Datum"} • Modus: ${difficulty} (${attacker})
                     </div>
-                    <div style="font-size: 24px; font-weight: 900; color: #ffffff;">${entry.outcome}</div>
-                    <div style="font-size: 13px; color: #8ca1b3; margin-top: 6px;">
-                        Burgpunkte: <b style="color:#00ffa2;">${entry.score}</b>
+                    <div style="font-size: 14px; font-weight: 800; color: ${statusColor}; margin-bottom: 6px;">
+                        ${statusText}
+                    </div>
+                    <div style="font-size: 24px; font-weight: 900; color: #ffffff;">
+                        ${score} <span style="font-size: 14px; font-weight: 600; color: #8ca1b3;">/ ${targetScore} Burgpunkte</span>
                     </div>
                 </div>
-                <div style="background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
-                    <div style="font-size: 11px; color: #8ca1b3; font-weight: 600;">STABILITÄT</div>
-                    <div style="font-size: 20px; font-weight: 800; color: ${color}; margin-top: 2px;">${entry.stability}%</div>
+                <div style="background: rgba(255,255,255,0.04); padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
+                    <div style="font-size: 11px; color: #8ca1b3; font-weight: 700; letter-spacing: 0.5px;">STABILITÄT</div>
+                    <div style="font-size: 22px; font-weight: 900; color: ${stabColor}; margin-top: 2px;">${stability}%</div>
                 </div>
             `;
             container.appendChild(div);
