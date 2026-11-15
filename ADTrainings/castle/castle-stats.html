@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Castle Builder Statistik - Autodarts</title>
   <link rel="stylesheet" href="castle.css">
+  <link rel="stylesheet" href="castle-fx.css">
 </head>
 <body>
   <div class="app">
 
     <header class="module-header">
-      <h1>🏰 BURG-CHRONIK & BESTENLISTE</h1>
+      <h1><span class="h1-crest" style="color:#d9b448"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 41V19h6v-6h5v6h4v-6h5v6h4v-6h5v6h6v22zM20 41V31a4 4 0 0 1 8 0v10"/></svg></span>BURG-CHRONIK & BESTENLISTE</h1>
       <p class="subtitle">Errichtete Festungen • Überstandene Belagerungen</p>
 
       <div class="header-actions">
-        <button class="hdr-btn btn-home" onclick="window.location.href='castle.html'">🏰 Zurück zum Burgbau</button>
-        <button class="hdr-btn btn-reset" onclick="resetStats()">🗑️ Chronik löschen</button>
-        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+        <button class="hdr-btn btn-home" onclick="window.location.href='castle.html'">Zurück zum Burgbau</button>
+        <button class="hdr-btn btn-reset" onclick="resetStats()">Chronik löschen</button>
+        <a href="../index.html" class="hdr-btn btn-home">Startseite</a>
       </div>
     </header>
 
@@ -30,7 +31,7 @@
         let history = JSON.parse(localStorage.getItem("castleHistory") || "[]");
 
         if (history.length === 0) {
-            container.innerHTML = "<div class='stat-card' style='color: #8ca1b3; margin-top: 30px;'>Noch keine Burg gebaut. Starte deine erste Herausforderung!</div>";
+            container.innerHTML = "<div class='stat-card' style='color: #a8967a; margin-top: 30px;'>Noch keine Burg gebaut. Starte deine erste Herausforderung!</div>";
             return;
         }
 
@@ -50,24 +51,24 @@
             const stability = entry.stability ?? 0;
             const survived = entry.survived !== undefined ? entry.survived : stability >= 70;
 
-            const statusColor = survived ? "#00ffa2" : "#ff6565";
-            const statusText = survived ? "🛡️ Belagerung überlebt" : "💥 Burg eingestürzt";
-            const stabColor = stability >= 90 ? "#00ffa2" : (stability >= 70 ? "#00e5ff" : (stability >= 50 ? "#ffc107" : "#ff6565"));
+            const statusColor = survived ? "#9fcf64" : "#c4392f";
+            const statusText = survived ? "Belagerung überlebt" : "Burg eingestürzt";
+            const stabColor = stability >= 90 ? "#9fcf64" : (stability >= 70 ? "#d9b448" : (stability >= 50 ? "#d98a2b" : "#c4392f"));
 
             div.innerHTML = `
                 <div>
-                    <div style="font-size: 13px; font-weight: 700; color: #00e5ff; margin-bottom: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #d9b448; margin-bottom: 4px;">
                         #${index + 1} — ${entry.date || "Unbekanntes Datum"} • Modus: ${difficulty} (${attacker})
                     </div>
                     <div style="font-size: 14px; font-weight: 800; color: ${statusColor}; margin-bottom: 6px;">
                         ${statusText}
                     </div>
-                    <div style="font-size: 24px; font-weight: 900; color: #ffffff;">
-                        ${score} <span style="font-size: 14px; font-weight: 600; color: #8ca1b3;">/ ${targetScore} Burgpunkte</span>
+                    <div style="font-size: 24px; font-weight: 900; color: #f3e7c4;">
+                        ${score} <span style="font-size: 14px; font-weight: 600; color: #a8967a;">/ ${targetScore} Burgpunkte</span>
                     </div>
                 </div>
                 <div style="background: rgba(255,255,255,0.04); padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
-                    <div style="font-size: 11px; color: #8ca1b3; font-weight: 700; letter-spacing: 0.5px;">STABILITÄT</div>
+                    <div style="font-size: 11px; color: #a8967a; font-weight: 700; letter-spacing: 0.5px;">STABILITÄT</div>
                     <div style="font-size: 22px; font-weight: 900; color: ${stabColor}; margin-top: 2px;">${stability}%</div>
                 </div>
             `;

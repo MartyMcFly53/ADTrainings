@@ -1,0 +1,97 @@
+/* ==========================================
+   CASTLE FX – Animationen (nach castle.css laden)
+========================================== */
+.fx-bar { height: 8px; border-radius: 2px; background: rgba(0,0,0,.5); border: 1px solid #4a3620; margin-top: 8px; overflow: hidden; }
+.fx-bar > i { display: block; height: 100%; width: 0; background: currentColor; transition: width .8s cubic-bezier(.2,.8,.2,1), color .4s; box-shadow: 0 0 10px currentColor; }
+#fxCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1200; }
+.hdr-btn:focus-visible, .diff-card:focus-visible { outline: 2px solid #d9b448; outline-offset: 2px; }
+.castle-visual-card { position: relative; overflow: hidden; }
+.castle-art { position: relative; }
+.fx-icon { color: #d9b448; }
+.diff-card:nth-child(2) .fx-icon { color: #c9d4dc; }
+.diff-card:nth-child(3) .fx-icon { color: #e8a24a; }
+.diff-card:nth-child(4) .fx-icon { color: #c4392f; }
+.siege-stage { position: relative; height: 190px; margin: 0 auto 8px; width: 260px; }
+.siege-castle { width: 100%; }
+.siege-stage #siegeAnimationIcon { position: absolute; left: -30px; bottom: 8px; width: 64px; height: 64px; color: #c4392f; }
+.siege-stage #siegeAnimationIcon svg { width: 100%; height: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+
+/* Titel: einmaliger Einzug, danach flackert das Fackellicht leise */
+.module-header h1 { animation: fxTitle 1.2s cubic-bezier(.2,.8,.2,1) both, fxTorch 3.2s ease-in-out 1.2s infinite; }
+@keyframes fxTitle { from { opacity: 0; letter-spacing: 14px; } }
+@keyframes fxTorch { 0%,100% { filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 12px rgba(217,180,72,.3)); } 45% { filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 22px rgba(255,190,70,.55)); } 70% { filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 15px rgba(217,180,72,.35)); } }
+
+#gameInterface.fx-enter .stat-card { animation: fxRise .6s cubic-bezier(.2,.8,.2,1) both; }
+#gameInterface.fx-enter .top-grid > :nth-child(2) { animation-delay: .1s; }
+#gameInterface.fx-enter .top-grid > :nth-child(3) { animation-delay: .2s; }
+@keyframes fxRise { from { opacity: 0; transform: translateY(20px); } }
+
+.status-takeout { animation: fxPulse 1.4s ease-in-out infinite; }
+@keyframes fxPulse { 50% { box-shadow: 0 0 20px rgba(217,138,43,.6); } }
+.diff-card.selected { animation: fxSelect .4s ease; }
+@keyframes fxSelect { 40% { transform: scale(1.05); } }
+
+/* Burg aus Einzelteilen: baut sich auf, Fahnen wehen, Fenster flackern */
+.fx-castle .part { transform-box: fill-box; transform-origin: 50% 100%; }
+.fx-castle.building .part { animation: fxStone .65s cubic-bezier(.3,1.5,.5,1) both; animation-delay: calc(var(--i) * 70ms); }
+@keyframes fxStone { from { opacity: 0; transform: translateY(-46px) scaleY(.7); } 60% { opacity: 1; } }
+.fx-castle .flag { transform-box: fill-box; transform-origin: 0 50%; animation: fxWave 1.7s ease-in-out infinite; }
+@keyframes fxWave { 50% { transform: skewY(7deg) scaleX(.9); } }
+.fx-castle .glow { animation: fxWin 2.4s ease-in-out infinite; }
+@keyframes fxWin { 0%,100% { opacity: .95; } 40% { opacity: .55; } 65% { opacity: 1; } }
+.fx-castle.collapsing .part { animation: fxFall 1.1s cubic-bezier(.5,0,1,.6) both; animation-delay: calc(var(--i) * 55ms); }
+@keyframes fxFall { to { transform: translate(calc((var(--i) - 5) * 7px), 70px) rotate(calc((var(--i) - 5) * 14deg)); opacity: 0; } }
+
+.castle-art.fx-thump { animation: fxThump .45s ease; }
+.castle-art.fx-hurt  { animation: fxHurt .5s ease; }
+@keyframes fxThump { 30% { transform: scaleY(.96) translateY(3px); } 60% { transform: scaleY(1.01); } }
+@keyframes fxHurt  { 20%,60% { transform: translateX(-6px) rotate(-1.5deg); } 40%,80% { transform: translateX(6px) rotate(1.5deg); } }
+
+/* fallender Stein */
+.fx-stone { position: absolute; left: 50%; top: 0; width: 22px; height: 16px; margin-left: -11px; border-radius: 2px; z-index: 3;
+  background: linear-gradient(180deg, #b0a68c, #6b6452); box-shadow: inset 0 -3px 0 rgba(0,0,0,.3); animation: fxDrop .38s cubic-bezier(.5,0,1,.7) forwards; }
+.fx-stone.gold { background: linear-gradient(180deg, #f6d97a, #9c7a24); }
+@keyframes fxDrop { from { transform: translateY(-40px) rotate(-30deg); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(var(--drop, 90px)) rotate(8deg); } }
+
+.fx-pts { position: absolute; left: 50%; top: 40%; font-family: 'Cinzel', serif; font-weight: 900; font-size: 30px; pointer-events: none; z-index: 4;
+  animation: fxPts 1.1s ease-out forwards; text-shadow: 0 2px 0 #000, 0 0 12px currentColor; }
+@keyframes fxPts { from { opacity: 1; transform: translate(-50%, 0) scale(.6); } 25% { transform: translate(-50%,-14px) scale(1.2); } to { opacity: 0; transform: translate(-50%,-70px) scale(1); } }
+
+.fx-bump { animation: fxBump .35s ease; }
+@keyframes fxBump { 40% { transform: scale(1.25); } }
+
+.throw-card.hit-tower   { animation: fxHitTower .7s ease; }
+.throw-card.hit-segment, .throw-card.hit-stone { animation: fxHitSeg .5s ease; }
+.throw-card.hit-weak    { animation: fxHitWeak .45s ease; }
+@keyframes fxHitTower { 0% { transform: scale(.85); } 35% { transform: scale(1.1); border-color: #f6d97a; box-shadow: 0 0 30px rgba(246,217,122,.7); } 100% { transform: none; } }
+@keyframes fxHitSeg   { 0% { transform: scale(.9); } 40% { transform: scale(1.06); border-color: #d9b448; box-shadow: 0 0 18px rgba(217,180,72,.45); } 100% { transform: none; } }
+@keyframes fxHitWeak  { 20%,60% { transform: translateX(-6px); border-color: #c4392f; box-shadow: 0 0 20px rgba(196,57,47,.5); } 40%,80% { transform: translateX(6px); } 100% { transform: none; } }
+.app.fx-shake { animation: fxShake .35s ease; }
+@keyframes fxShake { 25% { transform: translate(-3px, 2px); } 50% { transform: translate(3px, -2px); } 75% { transform: translate(-2px, 1px); } }
+
+.flash-message { animation: fxFlash .3s ease; }
+@keyframes fxFlash { from { opacity: 0; transform: translate(-50%, -16px); } }
+.modal:not(.hidden) { animation: fxFade .25s ease; }
+.modal:not(.hidden) .modal-content { animation: fxPop .4s cubic-bezier(.3,1.4,.5,1); }
+@keyframes fxFade { from { opacity: 0; } }
+@keyframes fxPop  { from { opacity: 0; transform: scale(.88) translateY(12px); } }
+
+/* Belagerung: Angreifer stürmt heran, Burg bebt */
+#siegeAnimationIcon { animation: fxCharge 1.7s cubic-bezier(.5,0,.7,.6) both !important; }
+@keyframes fxCharge { 0% { transform: translateX(-120px) scale(.7); opacity: 0; } 15% { opacity: 1; } 75% { transform: translateX(70px) scale(1.15); } 85% { transform: translateX(62px) scale(1.05); } 100% { transform: translateX(70px) scale(1.12); } }
+.siege-stage.shaking .siege-castle { animation: fxRumble .16s linear 6; }
+@keyframes fxRumble { 25% { transform: translate(-4px, 2px); } 75% { transform: translate(4px, -2px); } }
+.siege-box.result-win  { border-color: #9fcf64; box-shadow: inset 0 0 0 4px #1c150e, inset 0 0 0 5px rgba(159,207,100,.4), 0 0 50px rgba(159,207,100,.3); transition: .6s; }
+.siege-box.result-lose { border-color: #c4392f; box-shadow: inset 0 0 0 4px #1c150e, inset 0 0 0 5px rgba(196,57,47,.4), 0 0 50px rgba(196,57,47,.35); transition: .6s; }
+#siegeResultContainer { animation: fxPop .5s cubic-bezier(.3,1.4,.5,1); }
+
+/* Chronik */
+#history > .stat-card { animation: fxRise .5s cubic-bezier(.2,.8,.2,1) both; }
+#history > .stat-card:nth-child(2) { animation-delay: .06s; }
+#history > .stat-card:nth-child(3) { animation-delay: .12s; }
+#history > .stat-card:nth-child(4) { animation-delay: .18s; }
+#history > .stat-card:nth-child(n+5) { animation-delay: .24s; }
+}
+#history > .stat-card:first-child { border-color: #d9b448; box-shadow: inset 0 0 0 3px #1d160f, inset 0 0 0 4px #d9b448, 0 0 24px rgba(217,180,72,.22); }

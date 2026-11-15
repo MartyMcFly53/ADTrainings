@@ -30,7 +30,7 @@ ws.onopen = () => updateBoardStatusUI("ready", false);
 ws.onerror = (err) => console.error("WS Fehler:", err);
 ws.onclose = () => {
     const badge = document.getElementById("boardStatusBadge");
-    if (badge) { badge.textContent = "🔴 Board getrennt"; badge.className = "status-takeout"; }
+    if (badge) { badge.textContent = "Board getrennt"; badge.className = "status-takeout"; }
 };
 
 ws.onmessage = (msg) => {
@@ -65,10 +65,10 @@ function updateBoardStatusUI(status, isWaitingTakeout) {
     const badge = document.getElementById("boardStatusBadge");
     if (!badge) return;
     if (isWaitingTakeout || status === "takeout") {
-        badge.textContent = "🎯 Bitte Pfeile ziehen";
+        badge.textContent = "Bitte Pfeile ziehen";
         badge.className = "status-takeout";
     } else {
-        badge.textContent = "🟢 Board: Bereit";
+        badge.textContent = "Board: Bereit";
         badge.className = "status-ready";
     }
 }
@@ -206,24 +206,24 @@ function updateUI() {
     const statusText = document.getElementById("castleStatusText");
 
     if (stats.stability >= 90) {
-        stabEl.style.color = "#00ffa2";
-        castleIcon.innerText = "🏰✨";
+        stabEl.style.color = "#9fcf64";
+        castleIcon.innerText = "";
         statusText.innerText = "Uneinnehmbare Festung! Alle Mauern stehen.";
     } else if (stats.stability >= 70) {
-        stabEl.style.color = "#00e5ff";
-        castleIcon.innerText = "🏰";
+        stabEl.style.color = "#d9b448";
+        castleIcon.innerText = "";
         statusText.innerText = "Solide Wehranlage – hält dem Angriff stand.";
     } else if (stats.stability >= 50) {
-        stabEl.style.color = "#ffc107";
-        castleIcon.innerText = "🏯";
+        stabEl.style.color = "#d98a2b";
+        castleIcon.innerText = "";
         statusText.innerText = "Knappe Verteidigung – einige Mauern sind rissig.";
     } else if (stats.stability >= 30) {
-        stabEl.style.color = "#ff9800";
-        castleIcon.innerText = "🏚️";
+        stabEl.style.color = "#c8552a";
+        castleIcon.innerText = "";
         statusText.innerText = "Schwere Verwüstung – viele Schwachstellen!";
     } else {
-        stabEl.style.color = "#ff6565";
-        castleIcon.innerText = "🧱";
+        stabEl.style.color = "#c4392f";
+        castleIcon.innerText = "";
         statusText.innerText = "Instabiles Fundament – mehr Treffer benötigt!";
     }
 
@@ -259,7 +259,7 @@ function renderCurrentThrows() {
         const t = currentTurnThrows[i];
 
         if (t) {
-            const color = t.points >= 15 ? "#00ffa2" : (t.points > 0 ? "#00e5ff" : "#ff6565");
+            const color = t.points >= 15 ? "#9fcf64" : (t.points > 0 ? "#d9b448" : "#c4392f");
             card.innerHTML = `
                 <div class="stat-label">Pfeil ${i + 1}</div>
                 <div class="stat-value" style="color: ${color};">${t.value}</div>
@@ -283,8 +283,8 @@ function triggerSiegeCinematic() {
     const modal = document.getElementById("siegeModal");
     modal.classList.remove("hidden");
 
-    const icons = { 1: "🗡️", 2: "🏹", 3: "🛡️", 4: "🐉" };
-    document.getElementById("siegeAnimationIcon").innerText = icons[selectedDiff.level] || "🐉";
+    const icons = { 1: "", 2: "", 3: "", 4: "" };
+    document.getElementById("siegeAnimationIcon").innerText = icons[selectedDiff.level] || "";
     document.getElementById("siegeAttackerText").innerText = `${selectedDiff.attacker} greifen deine Festung an!`;
 
     setTimeout(() => {
@@ -299,24 +299,24 @@ function triggerSiegeCinematic() {
         let descText = "";
 
         if (stats.stability >= 90) {
-            titleText = "🏆 DIE ABSOLUTE FESTUNG (SIEG!)";
-            badge.style.color = "#00ffa2";
+            titleText = "DIE ABSOLUTE FESTUNG (SIEG!)";
+            badge.style.color = "#9fcf64";
             descText = `Deine Mauern waren unbezwingbar (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). ${selectedDiff.attacker} wurden vernichtend geschlagen!`;
         } else if (stats.stability >= 70) {
-            titleText = "🛡️ SOLIDE WEHRANLAGE (ÜBERLEBT!)";
-            badge.style.color = "#00e5ff";
+            titleText = "SOLIDE WEHRANLAGE (ÜBERLEBT!)";
+            badge.style.color = "#d9b448";
             descText = `Starke Verteidigung (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). Der Angriff von ${selectedDiff.attacker} wurde erfolgreich abgewehrt.`;
         } else if (stats.stability >= 50) {
-            titleText = "⚠️ KNAPPE RETTUNG (BESCHÄDIGT)";
-            badge.style.color = "#ffc107";
+            titleText = "KNAPPE RETTUNG (BESCHÄDIGT)";
+            badge.style.color = "#d98a2b";
             descText = `Ein Turm ist eingestürzt, aber der Kern hat gehalten (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). Für einen klaren Sieg fehlten nur wenige Punkte!`;
         } else if (stats.stability >= 30) {
-            titleText = "🔥 SCHWERE VERWÜSTUNG (NIEDERLAGE)";
-            badge.style.color = "#ff9800";
+            titleText = "SCHWERE VERWÜSTUNG (NIEDERLAGE)";
+            badge.style.color = "#c8552a";
             descText = `Zu viele Schwachstellen (${stats.weak} Fehlwürfe) haben die Statik geschwächt (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.).`;
         } else {
-            titleText = "💀 TOTALER EINSTURZ (NIEDERLAGE)";
-            badge.style.color = "#ff6565";
+            titleText = "TOTALER EINSTURZ (NIEDERLAGE)";
+            badge.style.color = "#c4392f";
             descText = `Die Festung ist unter dem Ansturm von ${selectedDiff.attacker} komplett kollabiert (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.).`;
         }
 
