@@ -20,7 +20,7 @@ ws.onopen = () => updateBoardStatusUI("ready", false);
 ws.onerror = (err) => console.error("WS Fehler:", err);
 ws.onclose = () => {
     const badge = document.getElementById("boardStatusBadge");
-    if (badge) { badge.textContent = "🔴 Board getrennt"; badge.className = "status-takeout"; }
+    if (badge) { badge.textContent = "Board getrennt"; badge.className = "status-takeout"; }
 };
 
 ws.onmessage = (msg) => {
@@ -55,10 +55,10 @@ function updateBoardStatusUI(status, isWaitingTakeout) {
     const badge = document.getElementById("boardStatusBadge");
     if (!badge) return;
     if (isWaitingTakeout || status === "takeout") {
-        badge.textContent = "🎯 Bitte Pfeile ziehen";
+        badge.textContent = "Bitte Pfeile ziehen";
         badge.className = "status-takeout";
     } else {
-        badge.textContent = "🟢 Board: Bereit";
+        badge.textContent = "Board: Bereit";
         badge.className = "status-ready";
     }
 }
@@ -163,9 +163,18 @@ function updateUI() {
     document.getElementById("precisionRate").innerText = `${stats.precision}%`;
     document.getElementById("dartsLeft").innerText = Math.max(0, dartsLeft);
 
-    // Raketen-Höhe (500 Pkt = max Höhe)
-    let percent = Math.min(100, (stats.score / 500) * 100);
-    document.getElementById("rocketShip").style.bottom = `${Math.max(10, percent * 1.85)}%`;
+    // Präzise, gestaffelte Raketen-Höhenberechnung (0 bis 500 Pkt. auf 10% bis 90% Skala)
+    let percent = 10;
+    if (stats.score <= 100) {
+        percent = 10 + (stats.score / 100) * 20; // 10% bis 30%
+    } else if (stats.score <= 200) {
+        percent = 30 + ((stats.score - 100) / 100) * 20; // 30% bis 50%
+    } else if (stats.score <= 350) {
+        percent = 50 + ((stats.score - 200) / 150) * 20; // 50% bis 70%
+    } else {
+        percent = 70 + (Math.min(500, stats.score - 350) / 150) * 20; // 70% bis 90%
+    }
+    document.getElementById("rocketShip").style.bottom = `${percent}%`;
 
     let phaseName = "Vorbereitung (0-99 Pkt.)";
     let altitude = "Startrampe (0 km)";
@@ -188,7 +197,6 @@ function updateUI() {
 
     renderCurrentThrows();
 }
-
 function renderCurrentThrows() {
     const container = document.getElementById("lastThrows");
     container.innerHTML = "";
@@ -205,7 +213,7 @@ function renderCurrentThrows() {
         const t = currentTurnThrows[i];
 
         if (t) {
-            const color = t.points > 0 ? (t.points >= 15 ? "#00ffa2" : "#00e5ff") : (t.points === 0 ? "#cbd5e1" : "#ff6565");
+            const color = t.points > 0 ? (t.points >= 15 ? "#6ee7a8" : "#7fc8ff") : (t.points === 0 ? "#c9d4e6" : "#ff5d4d");
             card.innerHTML = `
                 <div class="stat-label">Pfeil ${i + 1}</div>
                 <div class="stat-value" style="color: ${color};">${t.value}</div>
@@ -225,13 +233,13 @@ function renderCurrentThrows() {
 
 function triggerMissionOutcome(success, stats) {
     gameState.gameFinished = true;
-    const title = success ? "🚀 MARS-KOLONIE GEGRÜNDET!" : "💥 MISSION GESCHEITERT!";
+    const title = success ? "MARS-KOLONIE GEGRÜNDET!" : "MISSION GESCHEITERT!";
     const msg = success 
-        ? `Unglaublich! Mission ein voller Erfolg.<br>Treibstoff: <b>${stats.score} Pkt.</b><br>Bull-Präzision: <b style="color:#00ffa2;">${stats.precision}%</b><br>Benötigte Darts: <b>${gameState.throws.length}</b>`
+        ? `Unglaublich! Mission ein voller Erfolg.<br>Treibstoff: <b>${stats.score} Pkt.</b><br>Bull-Präzision: <b style="color:#6ee7a8;">${stats.precision}%</b><br>Benötigte Darts: <b>${gameState.throws.length}</b>`
         : `Der Treibstoff (oder die Darts) ist ausgegangen!<br>Erreichte Punkte: <b>${stats.score} / 500</b>.<br>Versuche es erneut!`;
 
     document.getElementById("missionModalTitle").innerText = title;
-    document.getElementById("missionModalTitle").style.color = success ? "#00ffa2" : "#ff6565";
+    document.getElementById("missionModalTitle").style.color = success ? "#6ee7a8" : "#ff5d4d";
     document.getElementById("missionModalText").innerHTML = msg;
     document.getElementById("missionModal").classList.remove("hidden");
 

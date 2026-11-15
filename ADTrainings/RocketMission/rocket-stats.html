@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <title>Mars Mission Statistik - Autodarts</title>
   <link rel="stylesheet" href="rocket.css">
+  <link rel="stylesheet" href="rocket-fx.css">
 </head>
 <body>
   <div class="app">
 
     <header class="module-header">
-      <h1>🚀 FLUG-CHRONIK & STATISTIK</h1>
+      <h1><span class="h1-mark" style="color:#ff8a3d"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4c8 6 10 16 8 28H16C14 20 16 10 24 4z"/><circle cx="24" cy="19" r="4"/><path d="M16 26l-7 10 7-2M32 26l7 10-7-2M20 36c0 4 1 7 4 9 3-2 4-5 4-9"/></svg></span>FLUG-CHRONIK & STATISTIK</h1>
       <p class="subtitle">Erfolgreiche Missionen • Bullseye-Präzision</p>
 
       <div class="header-actions">
-        <button class="hdr-btn btn-home" onclick="window.location.href='rocket.html'">🚀 Zurück zum Start</button>
-        <button class="hdr-btn btn-reset" onclick="resetStats()">🗑️ Chronik löschen</button>
-        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+        <button class="hdr-btn btn-home" onclick="window.location.href='rocket.html'">Zurück zum Start</button>
+        <button class="hdr-btn btn-reset" onclick="resetStats()">Chronik löschen</button>
+        <a href="../index.html" class="hdr-btn btn-home">Startseite</a>
       </div>
     </header>
 
@@ -29,7 +30,7 @@
         let history = JSON.parse(localStorage.getItem("rocketHistory") || "[]");
 
         if (history.length === 0) {
-            container.innerHTML = "<div class='stat-card' style='color: #8ca1b3; margin-top: 30px;'>Noch keine Mars Mission aufgezeichnet.</div>";
+            container.innerHTML = "<div class='stat-card' style='color: #8da2bd; margin-top: 30px;'>Noch keine Mars Mission aufgezeichnet.</div>";
             return;
         }
 
@@ -40,22 +41,22 @@
             div.className = "stat-card";
             div.style.cssText = "margin-bottom: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;";
 
-            const statusColor = entry.success ? "#00ffa2" : "#ff6565";
+            const statusColor = entry.success ? "#6ee7a8" : "#ff5d4d";
             const statusText = entry.success ? "Kolonie gegründet" : "Mission gescheitert";
 
             div.innerHTML = `
                 <div>
-                    <div style="font-size: 13px; font-weight: 700; color: #00e5ff; margin-bottom: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #7fc8ff; margin-bottom: 4px;">
                         #${index + 1} — ${entry.date} • <span style="color: ${statusColor};">${statusText}</span>
                     </div>
-                    <div style="font-size: 24px; font-weight: 900; color: #ffffff;">${entry.score} <span style="font-size: 15px; color: #8ca1b3;">Punkte (Treibstoff)</span></div>
-                    <div style="font-size: 13px; color: #8ca1b3; margin-top: 6px;">
+                    <div style="font-size: 24px; font-weight: 900; color: #f2f7ff;">${entry.score} <span style="font-size: 15px; color: #8da2bd;">Punkte (Treibstoff)</span></div>
+                    <div style="font-size: 13px; color: #8da2bd; margin-top: 6px;">
                         Benötigte Darts: <b>${entry.darts}</b>
                     </div>
                 </div>
                 <div style="background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
-                    <div style="font-size: 11px; color: #8ca1b3; font-weight: 600;">BULL-PRÄZISION</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #00ffa2; margin-top: 2px;">${entry.precision}%</div>
+                    <div style="font-size: 11px; color: #8da2bd; font-weight: 600;">BULL-PRÄZISION</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #6ee7a8; margin-top: 2px;">${entry.precision}%</div>
                 </div>
             `;
             container.appendChild(div);
