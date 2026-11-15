@@ -27,35 +27,35 @@
     <!-- Start-Bildschirm / Schwierigkeitswahl -->
     <div id="startScreen" class="stat-card" style="margin-bottom: 24px; padding: 30px;">
       <h2 style="color: #00e5ff; margin-bottom: 12px;">Wähle deinen Angreifer & Schwierigkeitsgrad</h2>
-      <p style="color: #8ca1b3; margin-bottom: 20px; font-size: 14px;">Je stärker der Angreifer, desto stabiler muss deine Burg sein, um zu überleben!</p>
+      <p style="color: #8ca1b3; margin-bottom: 20px; font-size: 14px;">Je stärker der Angreifer, desto höher die benötigte Punktzahl für 100% Stabilität!</p>
       
       <div class="difficulty-grid">
-        <div class="diff-card selected" onclick="setDifficulty('Anfänger', 'Goblins', 1)">
+        <div class="diff-card selected" onclick="setDifficulty('Anfänger', 'Goblins', 1, 350, this)">
           <div style="font-size: 24px;">🗡️</div>
           <div style="font-weight: 800; color: #00ffa2; margin-top: 6px;">Anfänger</div>
-          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Goblins</div>
+          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Goblins (Ziel: 350 Pkt.)</div>
         </div>
-        <div class="diff-card" onclick="setDifficulty('Fortgeschritten', 'Katapult-Truppe', 2)">
+        <div class="diff-card" onclick="setDifficulty('Fortgeschritten', 'Katapult-Truppe', 2, 450, this)">
           <div style="font-size: 24px;">🏹</div>
           <div style="font-weight: 800; color: #00e5ff; margin-top: 6px;">Fortgeschritten</div>
-          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Goblins + Katapult</div>
+          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Katapult-Truppe (Ziel: 450 Pkt.)</div>
         </div>
-        <div class="diff-card" onclick="setDifficulty('Experte', 'Belagerungs-Armee', 3)">
+        <div class="diff-card" onclick="setDifficulty('Experte', 'Belagerungs-Armee', 3, 550, this)">
           <div style="font-size: 24px;">🛡️</div>
           <div style="font-weight: 800; color: #ffc107; margin-top: 6px;">Experte</div>
-          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Elite-Armee</div>
+          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Elite-Armee (Ziel: 550 Pkt.)</div>
         </div>
-        <div class="diff-card" onclick="setDifficulty('Elite', 'Der Schatten-Drache', 4)">
+        <div class="diff-card" onclick="setDifficulty('Elite', 'Der Schatten-Drache', 4, 680, this)">
           <div style="font-size: 24px;">🐉</div>
           <div style="font-weight: 800; color: #ff6565; margin-top: 6px;">Elite</div>
-          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Der Drache</div>
+          <div style="font-size: 12px; color: #8ca1b3;">Gegner: Der Drache (Ziel: 680 Pkt.)</div>
         </div>
       </div>
 
       <button class="start-game-btn" onclick="startCastleGame()">Burgbau starten (100 Darts)</button>
     </div>
 
-    <!-- Haupt-Spieloberfläche (während des Spiels versteckt) -->
+    <!-- Haupt-Spieloberfläche (vor Spielstart versteckt) -->
     <div id="gameInterface" style="display: none;">
       <div class="top-grid">
 
@@ -67,19 +67,19 @@
 
           <div class="sub-stats-grid" style="grid-template-columns: 1fr 1fr;">
             <div class="sub-stat-box">
-              <div class="stat-label">Türme (3x)</div>
+              <div class="stat-label">Türme (15P+)</div>
               <div class="stat-value" id="countTowers" style="font-size: 18px; color: #00ffa2;">0</div>
             </div>
             <div class="sub-stat-box">
-              <div class="stat-label">Segmente (2x)</div>
+              <div class="stat-label">Segmente (10P)</div>
               <div class="stat-value" id="countSegments" style="font-size: 18px; color: #00e5ff;">0</div>
             </div>
             <div class="sub-stat-box">
-              <div class="stat-label">Steine (1x)</div>
+              <div class="stat-label">Steine (5P)</div>
               <div class="stat-value" id="countStones" style="font-size: 18px; color: #cbd5e1;">0</div>
             </div>
             <div class="sub-stat-box">
-              <div class="stat-label">Schwachst.</div>
+              <div class="stat-label">Schwachst. (-2P)</div>
               <div class="stat-value" id="countWeak" style="font-size: 18px; color: #ff6565;">0</div>
             </div>
           </div>
@@ -87,20 +87,20 @@
 
         <!-- Mitte: Live-Visualisierung der Burg -->
         <div class="stat-card target-display-card castle-visual-card">
-          <div class="stat-label" id="currentAttackerDisplay" style="color: #00e5ff; font-weight: 700;">ANGRIFF: Goblinschmiede</div>
+          <div class="stat-label" id="currentAttackerDisplay" style="color: #00e5ff; font-weight: 700;">ANGRIFF: Goblins</div>
           <div class="castle-graphic" id="castleGraphic">🏰</div>
-          <div class="target-sub-info" id="castleStatusText">Deine Burg steht stabil.</div>
+          <div class="target-sub-info" id="castleStatusText">Baue deine Festung auf (Ziel: 350 Pkt.).</div>
         </div>
 
         <!-- Rechts: Wertung & Stabilität -->
         <div class="stat-card column-card">
           <div class="stat-label">BURGWERTUNG</div>
           <div class="stat-value" id="castleScore" style="font-size: 38px; color: #00e5ff; margin-top: 10px;">0</div>
-          <div class="stat-label">Gesamtpunkte</div>
+          <div class="stat-label" id="targetScoreLabel">Ziel: 350 Punkte</div>
 
           <div style="margin-top: 16px; background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-            <div class="stat-label">Geschätzte Stabilität</div>
-            <div class="stat-value" id="stabilityDisplay" style="font-size: 22px; color: #00ffa2; margin-top: 4px;">100%</div>
+            <div class="stat-label">Aktuelle Stabilität</div>
+            <div class="stat-value" id="stabilityDisplay" style="font-size: 22px; color: #00ffa2; margin-top: 4px;">0%</div>
           </div>
         </div>
 
@@ -122,15 +122,15 @@
         
         <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
           <b style="color: #00ffa2;">Gültige Bauteil-Zahlen (18, 19, 20)</b><br>
-          • <b>Single (18–20):</b> Mauerstein (+1 Pkt.)<br>
-          • <b>Double (18–20):</b> Mauersegment (+2 Pkt.)<br>
-          • <b>Triple (18–20):</b> Wehrturm (+3 Pkt.)
+          • <b>Single (18–20):</b> Mauerstein (+5 Pkt.)<br>
+          • <b>Double (18–20):</b> Mauersegment (+10 Pkt.)<br>
+          • <b>Triple (18–20):</b> Wehrturm (+15 Pkt.)
         </div>
 
         <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
           <b style="color: #00e5ff;">Spezial-Doppel & Königsturm</b><br>
-          • <b>Zusätzliche Doppel:</b> D16, D8, D4, D2, D10 zählen ebenfalls als stabile Mauersegmente (+2 Pkt.).<br>
-          • <b>Bull / DBull:</b> Königsturm & Verstärkung (+4 bis +6 Pkt.).
+          • <b>Zusätzliche Doppel:</b> D16, D8, D4, D2, D10 zählen ebenfalls als stabile Mauersegmente (+10 Pkt.).<br>
+          • <b>Outer Bull / DBull:</b> Königsturm (+20 / +30 Pkt.).
         </div>
 
         <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">

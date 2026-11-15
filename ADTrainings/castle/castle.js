@@ -1,23 +1,27 @@
 "use strict";
 
 /* ==========================================
-   CASTLE BUILDER CHALLENGE - LOGIK (Mit neuen Segmentregeln)
+   CASTLE BUILDER CHALLENGE - LOGIK
 ========================================== */
 
 let boardIp = localStorage.getItem("autodarts_ip") || "192.168.2.91";
 const ws = new WebSocket(`ws://${boardIp}:3180/api/events`);
 let lastNumThrows = 0;
 
-let gameConfig = {
-    difficultyName: "Anfänger",
-    attackerName: "Goblins",
-    difficultyLevel: 1,
-    maxDarts: 100
+const MAX_DARTS = 100;
+const VALID_MAIN_NUMBERS = [18, 19, 20];
+const SPECIAL_DOUBLES = [16, 8, 4, 2, 10];
+
+let selectedDiff = {
+    name: "Anfänger",
+    attacker: "Goblins",
+    level: 1,
+    targetScore: 350
 };
 
 let gameState = {
     gameStarted: false,
-    gameOver: false,
+    gameFinished: false,
     throws: [],
     waitingForTakeout: false
 };
@@ -30,7 +34,7 @@ ws.onclose = () => {
 };
 
 ws.onmessage = (msg) => {
-    if (!gameState.gameStarted || gameState.gameOver) return;
+    if (!gameState.gameStarted || gameState.gameFinished) return;
     const event = JSON.parse(msg.data);
     if (!event.data) return;
 
@@ -39,6 +43,7 @@ ws.onmessage = (msg) => {
         const throws = data.throws || [];
         const status = data.status;
 
+        // Takeout-Logik: Bei Herausziehen der Pfeile (throws.length === 0) Reset für neue Aufnahme
         if (gameState.waitingForTakeout) {
             if (throws.length === 0) {
                 gameState.waitingForTakeout = false;
@@ -68,27 +73,26 @@ function updateBoardStatusUI(status, isWaitingTakeout) {
     }
 }
 
-function setDifficulty(name, attacker, level) {
-    gameConfig.difficultyName = name;
-    gameConfig.attackerName = attacker;
-    gameConfig.difficultyLevel = level;
-
+function setDifficulty(name, attacker, level, targetScore, element) {
+    selectedDiff = { name, attacker, level, targetScore };
     document.querySelectorAll(".diff-card").forEach(card => card.classList.remove("selected"));
-    event.currentTarget.classList.add("selected");
+    if (element) element.classList.add("selected");
 }
 
 function startCastleGame() {
     gameState.gameStarted = true;
-    gameState.gameOver = false;
+    gameState.gameFinished = false;
     gameState.throws = [];
     gameState.waitingForTakeout = false;
+    lastNumThrows = 0;
 
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("gameInterface").style.display = "block";
-    document.getElementById("currentAttackerDisplay").innerText = `ANGREIFER: ${gameConfig.attackerName} (${gameConfig.difficultyName})`;
+    document.getElementById("currentAttackerDisplay").innerText = `ANGRIFF: ${selectedDiff.attacker} (${selectedDiff.name})`;
+    document.getElementById("targetScoreLabel").innerText = `Ziel: ${selectedDiff.targetScore} Punkte`;
+    document.getElementById("castleStatusText").innerText = `Baue deine Festung auf (Ziel: ${selectedDiff.targetScore} Pkt.).`;
 
     updateUI();
-    showFlash("Burgbau begonnen! Errichte deine Mauern!");
 }
 
 function processStateEvent(data) {
@@ -100,67 +104,52 @@ function processStateEvent(data) {
 
     lastNumThrows = throws.length;
     const lastThrow = throws[throws.length - 1];
-    const parsed = parseSegment(lastThrow);
+    const parsed = parseCastleSegment(lastThrow);
     if (parsed) registerThrow(parsed);
 }
 
-// NEUE REGELN PRÜFEN:
-// - Nur 18, 19, 20 (Single, Double, Triple)
-// - Zusätzliche Doppel: D16, D8, D4, D2, D10
-// - Bull / DBull
-// - Alles andere = Schwachstelle (Miss)
-function parseSegment(throwData) {
+function parseCastleSegment(throwData) {
     const name = throwData.segmentName || "";
     const number = throwData.segmentNumber;
     const multiplier = throwData.multiplier;
 
     if (!name || name.startsWith("M") || name === "MISS" || multiplier === 0) {
-        return { display: "MISS", type: "miss", points: -2 };
+        return { display: "MISS", category: "weak", points: -2 };
     }
 
-    // Bull / DBull prüfen
+    // Bull / DBull (Königsturm)
     if (name.toUpperCase().includes("BULL") || number === 25 || number === 50 || name === "25" || name === "50") {
         const isDouble = (multiplier === 2 || name.toUpperCase() === "DBULL" || number === 50 || name === "50");
         return {
             display: isDouble ? "DBULL" : "SBULL",
-            type: "king",
-            points: isDouble ? 6 : 4
+            category: "tower",
+            points: isDouble ? 30 : 20
         };
     }
 
-    // Erlaubte Hauptzahlen: 18, 19, 20
-    const validNumbers = [18, 19, 20];
-    // Zusätzliche erlaubte Doppel: 16, 8, 4, 2, 10
-    const validSpecialDoubles = [16, 8, 4, 2, 10];
-
-    const isTargetNumber = validNumbers.includes(number);
-    const isSpecialDouble = (multiplier === 2 && validSpecialDoubles.includes(number));
-
-    if (!isTargetNumber && !isSpecialDouble) {
-        // Zählt nicht als Bauteil -> Schwachstelle
-        return { display: name, type: "miss", points: -2 };
+    // Hauptzahlen: 18, 19, 20
+    if (VALID_MAIN_NUMBERS.includes(number)) {
+        if (multiplier === 3) return { display: name, category: "tower", points: 15 };
+        if (multiplier === 2) return { display: name, category: "segment", points: 10 };
+        return { display: name, category: "stone", points: 5 };
     }
 
-    if (multiplier === 3 && isTargetNumber) {
-        return { display: name, type: "tower", points: 3 };
-    }
-    if (multiplier === 2) {
-        return { display: name, type: "segment", points: 2 };
-    }
-    if (multiplier === 1 && isTargetNumber) {
-        return { display: name, type: "stone", points: 1 };
+    // Spezial-Doppel: D16, D8, D4, D2, D10
+    if (multiplier === 2 && SPECIAL_DOUBLES.includes(number)) {
+        return { display: name, category: "segment", points: 10 };
     }
 
-    return { display: name, type: "miss", points: -2 };
+    // Alles andere = Schwachstelle
+    return { display: name, category: "weak", points: -2 };
 }
 
 function registerThrow(hit) {
-    if (!gameState.gameStarted || gameState.gameOver || gameState.waitingForTakeout) return;
+    if (gameState.gameFinished || gameState.waitingForTakeout) return;
 
     gameState.throws.push({
         id: crypto.randomUUID(),
         value: hit.display,
-        type: hit.type,
+        category: hit.category,
         points: hit.points
     });
 
@@ -173,53 +162,69 @@ function registerThrow(hit) {
 
     updateUI();
 
-    if (dartsThrown >= gameConfig.maxDarts) {
-        triggerSiege();
+    if (dartsThrown >= MAX_DARTS && !gameState.gameFinished) {
+        triggerSiegeCinematic();
     }
 }
 
 function calculateCastleStats() {
-    let towers = 0, segments = 0, stones = 0, weak = 0, kings = 0;
-    let totalScore = 0;
+    let towers = 0, segments = 0, stones = 0, weak = 0;
+    let score = 0;
 
     gameState.throws.forEach(t => {
-        totalScore += t.points;
-        if (t.type === "tower") towers++;
-        else if (t.type === "segment") segments++;
-        else if (t.type === "stone") stones++;
-        else if (t.type === "king") kings++;
-        else if (t.type === "miss") weak++;
+        score += t.points;
+        if (t.category === "tower") towers++;
+        else if (t.category === "segment") segments++;
+        else if (t.category === "stone") stones++;
+        else if (t.category === "weak") weak++;
     });
 
-    let stability = Math.max(0, Math.min(100, Math.round(((totalScore * 0.8) + (kings * 3)) / (gameConfig.maxDarts * 1.5) * 100) - (weak * 3)));
-    stability = Math.max(5, Math.min(100, stability + 20));
+    score = Math.max(0, score);
 
-    return { towers, segments, stones, weak, kings, totalScore, stability };
+    // Stabilität in % im Verhältnis zur Zielmarke des gewählten Angreifers
+    const rawStability = (score / selectedDiff.targetScore) * 100;
+    const stability = Math.min(100, Math.max(0, Math.round(rawStability)));
+
+    return { towers, segments, stones, weak, score, stability };
 }
 
 function updateUI() {
     const stats = calculateCastleStats();
-    const dartsLeft = gameConfig.maxDarts - gameState.throws.length;
+    const dartsLeft = MAX_DARTS - gameState.throws.length;
 
     document.getElementById("dartsLeft").innerText = Math.max(0, dartsLeft);
-    document.getElementById("countTowers").innerText = stats.towers + stats.kings;
+    document.getElementById("countTowers").innerText = stats.towers;
     document.getElementById("countSegments").innerText = stats.segments;
     document.getElementById("countStones").innerText = stats.stones;
     document.getElementById("countWeak").innerText = stats.weak;
-    document.getElementById("castleScore").innerText = stats.totalScore;
-    document.getElementById("stabilityDisplay").innerText = `${stats.stability}%`;
+    document.getElementById("castleScore").innerText = stats.score;
 
-    const graphic = document.getElementById("castleGraphic");
+    const stabEl = document.getElementById("stabilityDisplay");
+    stabEl.innerText = `${stats.stability}%`;
+
+    const castleIcon = document.getElementById("castleGraphic");
     const statusText = document.getElementById("castleStatusText");
-    if (stats.stability >= 80) {
-        graphic.innerText = "👑🏰";
-        statusText.innerText = "Prachtvolle Festung!";
+
+    if (stats.stability >= 90) {
+        stabEl.style.color = "#00ffa2";
+        castleIcon.innerText = "🏰✨";
+        statusText.innerText = "Uneinnehmbare Festung! Alle Mauern stehen.";
+    } else if (stats.stability >= 70) {
+        stabEl.style.color = "#00e5ff";
+        castleIcon.innerText = "🏰";
+        statusText.innerText = "Solide Wehranlage – hält dem Angriff stand.";
     } else if (stats.stability >= 50) {
-        graphic.innerText = "🏰";
-        statusText.innerText = "Solide Wehranlage.";
+        stabEl.style.color = "#ffc107";
+        castleIcon.innerText = "🏯";
+        statusText.innerText = "Knappe Verteidigung – einige Mauern sind rissig.";
+    } else if (stats.stability >= 30) {
+        stabEl.style.color = "#ff9800";
+        castleIcon.innerText = "🏚️";
+        statusText.innerText = "Schwere Verwüstung – viele Schwachstellen!";
     } else {
-        graphic.innerText = "🏚️";
-        statusText.innerText = "Achtung, viele Schwachstellen!";
+        stabEl.style.color = "#ff6565";
+        castleIcon.innerText = "🧱";
+        statusText.innerText = "Instabiles Fundament – mehr Treffer benötigt!";
     }
 
     renderCurrentThrows();
@@ -229,10 +234,24 @@ function renderCurrentThrows() {
     const container = document.getElementById("lastThrows");
     container.innerHTML = "";
 
-    const remainder = gameState.throws.length % 3;
-    const count = remainder === 0 && gameState.throws.length > 0 ? 3 : remainder;
-    const startIdx = gameState.throws.length - count;
-    const currentTurnThrows = gameState.throws.slice(startIdx >= 0 ? startIdx : 0);
+    // Wenn wir NICHT auf Takeout warten und gerade ein neuer Turn beginnt (throws % 3 === 0), zeige '-'
+    if (!gameState.waitingForTakeout && gameState.throws.length % 3 === 0) {
+        for (let i = 0; i < 3; i++) {
+            const card = document.createElement("div");
+            card.className = "stat-card throw-card";
+            card.style.opacity = "0.5";
+            card.innerHTML = `<div class="stat-label">Pfeil ${i + 1}</div><div class="stat-value">-</div>`;
+            card.onclick = () => openCorrectionModal(null, "MISS");
+            container.appendChild(card);
+        }
+        return;
+    }
+
+    // Ansonsten ermittle die aktuelle 3er-Aufnahme
+    const totalThrows = gameState.throws.length;
+    const currentTurnIndex = totalThrows > 0 ? Math.floor((totalThrows - 1) / 3) : 0;
+    const startIdx = currentTurnIndex * 3;
+    const currentTurnThrows = gameState.throws.slice(startIdx, startIdx + 3);
 
     for (let i = 0; i < 3; i++) {
         const card = document.createElement("div");
@@ -240,7 +259,7 @@ function renderCurrentThrows() {
         const t = currentTurnThrows[i];
 
         if (t) {
-            const color = t.points > 0 ? (t.points >= 3 ? "#00ffa2" : "#00e5ff") : "#ff6565";
+            const color = t.points >= 15 ? "#00ffa2" : (t.points > 0 ? "#00e5ff" : "#ff6565");
             card.innerHTML = `
                 <div class="stat-label">Pfeil ${i + 1}</div>
                 <div class="stat-value" style="color: ${color};">${t.value}</div>
@@ -258,81 +277,65 @@ function renderCurrentThrows() {
     }
 }
 
-// ==========================================
-// CINEMATIC BELAGERUNG (ENDGAME)
-// ==========================================
-function triggerSiege() {
-    gameState.gameOver = true;
+function triggerSiegeCinematic() {
+    gameState.gameFinished = true;
     const stats = calculateCastleStats();
+    const modal = document.getElementById("siegeModal");
+    modal.classList.remove("hidden");
 
-    document.getElementById("siegeAttackerText").innerText = `Der Gegner (${gameConfig.attackerName}) stürmt mit voller Wucht gegen deine Tore!`;
-    document.getElementById("siegeModal").classList.remove("hidden");
-
-    setTimeout(() => {
-        document.getElementById("siegeAnimationIcon").innerText = "⚔️💥";
-        document.getElementById("siegeStatusMessage").innerText = "Kämpfe toben an den Mauern...";
-    }, 1500);
+    const icons = { 1: "🗡️", 2: "🏹", 3: "🛡️", 4: "🐉" };
+    document.getElementById("siegeAnimationIcon").innerText = icons[selectedDiff.level] || "🐉";
+    document.getElementById("siegeAttackerText").innerText = `${selectedDiff.attacker} greifen deine Festung an!`;
 
     setTimeout(() => {
-        document.getElementById("siegeAnimationIcon").style.animation = "none";
-        evaluateSiegeOutcome(stats);
-    }, 3200);
+        document.getElementById("siegeStatusMessage").style.display = "none";
+        const resContainer = document.getElementById("siegeResultContainer");
+        const badge = document.getElementById("siegeResultBadge");
+        const details = document.getElementById("siegeResultDetails");
+        resContainer.style.display = "block";
+
+        let survived = stats.stability >= 70;
+        let titleText = "";
+        let descText = "";
+
+        if (stats.stability >= 90) {
+            titleText = "🏆 DIE ABSOLUTE FESTUNG (SIEG!)";
+            badge.style.color = "#00ffa2";
+            descText = `Deine Mauern waren unbezwingbar (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). ${selectedDiff.attacker} wurden vernichtend geschlagen!`;
+        } else if (stats.stability >= 70) {
+            titleText = "🛡️ SOLIDE WEHRANLAGE (ÜBERLEBT!)";
+            badge.style.color = "#00e5ff";
+            descText = `Starke Verteidigung (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). Der Angriff von ${selectedDiff.attacker} wurde erfolgreich abgewehrt.`;
+        } else if (stats.stability >= 50) {
+            titleText = "⚠️ KNAPPE RETTUNG (BESCHÄDIGT)";
+            badge.style.color = "#ffc107";
+            descText = `Ein Turm ist eingestürzt, aber der Kern hat gehalten (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.). Für einen klaren Sieg fehlten nur wenige Punkte!`;
+        } else if (stats.stability >= 30) {
+            titleText = "🔥 SCHWERE VERWÜSTUNG (NIEDERLAGE)";
+            badge.style.color = "#ff9800";
+            descText = `Zu viele Schwachstellen (${stats.weak} Fehlwürfe) haben die Statik geschwächt (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.).`;
+        } else {
+            titleText = "💀 TOTALER EINSTURZ (NIEDERLAGE)";
+            badge.style.color = "#ff6565";
+            descText = `Die Festung ist unter dem Ansturm von ${selectedDiff.attacker} komplett kollabiert (${stats.stability}% Stabilität • ${stats.score}/${selectedDiff.targetScore} Pkt.).`;
+        }
+
+        badge.innerText = titleText;
+        details.innerHTML = descText;
+
+        saveCastleResult(stats, survived);
+    }, 1800);
 }
 
-function evaluateSiegeOutcome(stats) {
-    const stab = stats.stability;
-    let icon = "👑";
-    let title = "";
-    let desc = "";
-
-    if (stab >= 90) {
-        icon = "👑✨";
-        title = "DIE BURG HÄLT STAND!";
-        desc = `Unglaublich! Deine Festung ist uneinnehmbar. Der ${gameConfig.attackerName} wurde mit verheerenden Verlusten zurückgeschlagen.`;
-    } else if (stab >= 70) {
-        icon = "🏰🛡️";
-        title = "SIEGE ABGEWEHRT!";
-        desc = `Einige Außenmauern brachen unter dem Druck ein, aber der innere Burgkern hielt stand. Du hast überlebt!`;
-    } else if (stab >= 50) {
-        icon = "💥🏚️";
-        title = "SCHWER BESCHÄDIGT!";
-        desc = `Ein Turm stürzte ein und Feinde drangen in den Hof ein, doch du konntest sie im letzten Moment zurückwerfen. Knapp gerettet!`;
-    } else if (stab >= 30) {
-        icon = "🔥⚠️";
-        title = "GROSSE VERWÜSTUNG!";
-        desc = `Große Teile deiner Burg liegen in Schutt und Asche. Die Schwachstellen waren fatal. Deine Burg braucht dringend Reparatur.`;
-    } else {
-        icon = "☠️💀";
-        title = "TOTALER EINSTURZ!";
-        desc = `Die Burg war zu schwach gebaut. Unter dem Ansturm des ${gameConfig.attackerName} ist alles kollabiert. Keine Chance.`;
-    }
-
-    document.getElementById("siegeAnimationIcon").innerText = icon;
-    document.getElementById("siegeStatusMessage").style.display = "none";
-
-    const badge = document.getElementById("siegeResultBadge");
-    badge.innerHTML = `${title} <span style="color:#00e5ff;">(${stab}% Stabilität)</span>`;
-    badge.style.color = stab >= 70 ? "#00ffa2" : stab >= 50 ? "#ffc107" : "#ff6565";
-
-    document.getElementById("siegeResultDetails").innerHTML = `
-        <b>Burg-Statistik:</b><br>
-        Türme & Königstürme: ${stats.towers + stats.kings} • Segmente: ${stats.segments} • Steine: ${stats.stones}<br>
-        Schwachstellen (Misses): <b style="color:#ff6565;">${stats.weak}</b><br>
-        Gesamt-Burgpunkte: ${stats.totalScore}
-    `;
-
-    document.getElementById("siegeResultContainer").style.display = "block";
-    saveGameResult(stats, title);
-}
-
-function saveGameResult(stats, outcomeTitle) {
+function saveCastleResult(stats, survived) {
     const entry = {
         date: new Date().toLocaleString(),
-        difficulty: gameConfig.difficultyName,
-        attacker: gameConfig.attackerName,
+        difficulty: selectedDiff.name,
+        attacker: selectedDiff.attacker,
+        score: stats.score,
+        targetScore: selectedDiff.targetScore,
         stability: stats.stability,
-        score: stats.totalScore,
-        outcome: outcomeTitle
+        survived: survived
     };
 
     let history = JSON.parse(localStorage.getItem("castleHistory") || "[]");
@@ -341,25 +344,24 @@ function saveGameResult(stats, outcomeTitle) {
 }
 
 // ==========================================
-// KORREKTUR MODAL (Dropdown angepasst auf Regeln)
+// KORREKTUR MODAL
 // ==========================================
 let selectedThrowId = null;
 
 function populateCorrectionDropdown() {
     const select = document.getElementById("correctionSelect");
-    const options = ["MISS", "SBULL", "DBULL"];
-    // Nur 18-20 sowie Spezial-Doppel D16, D8, D4, D2, D10 anbieten für einfache Bedienung
-    [20, 19, 18].forEach(n => {
-        options.push(`S${n}`, `D${n}`, `T${n}`);
-    });
-    [16, 10, 8, 4, 2].forEach(n => {
-        options.push(`D${n}`);
-    });
+    const options = [
+        "MISS", "SBULL", "DBULL",
+        "T20", "D20", "S20",
+        "T19", "D19", "S19",
+        "T18", "D18", "S18",
+        "D16", "D10", "D8", "D4", "D2"
+    ];
     select.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
 }
 
 function openCorrectionModal(throwId, currentVal) {
-    if (gameState.gameOver) return;
+    if (gameState.gameFinished) return;
     selectedThrowId = throwId;
     document.getElementById("correctionSelect").value = currentVal || "MISS";
     document.getElementById("correctionModal").classList.remove("hidden");
@@ -372,22 +374,22 @@ function closeCorrectionModal() {
 
 function saveCorrection() {
     const newVal = document.getElementById("correctionSelect").value;
-    const parsed = parseSegmentFromString(newVal);
+    const parsed = parseCastleSegmentFromString(newVal);
 
     if (selectedThrowId) {
         const idx = gameState.throws.findIndex(t => t.id === selectedThrowId);
         if (idx !== -1) {
-            gameState.throws[idx] = { ...gameState.throws[idx], value: parsed.display, type: parsed.type, points: parsed.points };
+            gameState.throws[idx] = { ...gameState.throws[idx], value: parsed.display, category: parsed.category, points: parsed.points };
             showFlash("Bauteil korrigiert");
         }
     } else {
         gameState.throws.push({
             id: crypto.randomUUID(),
             value: parsed.display,
-            type: parsed.type,
+            category: parsed.category,
             points: parsed.points
         });
-        showFlash("Bauteil manuell hinzugefügt");
+        showFlash("Wurf manuell hinzugefügt");
     }
 
     gameState.waitingForTakeout = (gameState.throws.length % 3 === 0);
@@ -395,34 +397,32 @@ function saveCorrection() {
     closeCorrectionModal();
 }
 
-function parseSegmentFromString(val) {
-    if (val === "MISS") return { display: "MISS", type: "miss", points: -2 };
-    if (val === "SBULL") return { display: "SBULL", type: "king", points: 4 };
-    if (val === "DBULL") return { display: "DBULL", type: "king", points: 6 };
+function parseCastleSegmentFromString(val) {
+    if (val === "MISS") return { display: "MISS", category: "weak", points: -2 };
+    if (val === "SBULL") return { display: "SBULL", category: "tower", points: 20 };
+    if (val === "DBULL") return { display: "DBULL", category: "tower", points: 30 };
 
-    const prefix = val.charAt(0);
     const num = parseInt(val.slice(1), 10);
-    const mult = prefix === "D" ? 2 : prefix === "T" ? 3 : 1;
+    const mult = val.startsWith("D") ? 2 : val.startsWith("T") ? 3 : 1;
 
-    const validNumbers = [18, 19, 20];
-    const validSpecialDoubles = [16, 8, 4, 2, 10];
-
-    const isTargetNumber = validNumbers.includes(num);
-    const isSpecialDouble = (mult === 2 && validSpecialDoubles.includes(num));
-
-    if (!isTargetNumber && !isSpecialDouble) {
-        return { display: val, type: "miss", points: -2 };
+    if (VALID_MAIN_NUMBERS.includes(num)) {
+        if (mult === 3) return { display: val, category: "tower", points: 15 };
+        if (mult === 2) return { display: val, category: "segment", points: 10 };
+        return { display: val, category: "stone", points: 5 };
     }
 
-    if (mult === 3 && isTargetNumber) return { display: val, type: "tower", points: 3 };
-    if (mult === 2) return { display: val, type: "segment", points: 2 };
-    if (mult === 1 && isTargetNumber) return { display: val, type: "stone", points: 1 };
+    if (mult === 2 && SPECIAL_DOUBLES.includes(num)) {
+        return { display: val, category: "segment", points: 10 };
+    }
 
-    return { display: val, type: "miss", points: -2 };
+    return { display: val, category: "weak", points: -2 };
 }
 
 function abortTraining() {
-    if (gameState.throws.length === 0) return;
+    if (gameState.throws.length === 0) {
+        location.reload();
+        return;
+    }
     if (confirm("Aktuellen Burgbau wirklich abbrechen?")) {
         location.reload();
     }
