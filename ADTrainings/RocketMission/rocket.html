@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mars Mission Challenge - Autodarts</title>
+  <link rel="stylesheet" href="rocket.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header im einheitlichen Hub-Design -->
+    <header class="module-header">
+      <h1>🚀 MARS MISSION CHALLENGE</h1>
+      <p class="subtitle">Präzisions-Training: Erreiche 500 Punkte in max. 150 Darts!</p>
+
+      <div class="header-actions">
+        <div id="boardStatusBadge" class="status-ready">🟢 Board: Verbindet...</div>
+        <button class="hdr-btn btn-reset" onclick="resetAutodartsBoard()">🔄 Board Reset</button>
+        <button class="hdr-btn btn-abort" onclick="abortTraining()">❌ Abbrechen</button>
+        <button class="hdr-btn btn-stats" onclick="window.location.href='rocket-stats.html'">📊 Statistik</button>
+        <button class="hdr-btn btn-ip" onclick="changeBoardIp()">⚙️ IP</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
+
+    <!-- Haupt-Spieloberfläche -->
+    <div class="top-grid">
+
+      <!-- Links: Missions-Status & Tank -->
+      <div class="stat-card column-card">
+        <div class="stat-label">TREIBSTOFF-KONTO</div>
+        <div class="stat-value highlight-score" id="missionScore">0</div>
+        <div class="stat-label" style="margin-bottom: 10px;">Punkte (Ziel: 500)</div>
+
+        <div class="current-phase-box" id="currentPhaseBox">
+          <div class="stat-label">Aktuelle Stufe</div>
+          <div id="phaseTitle" style="font-size: 16px; font-weight: 800; color: #00ffa2; margin-top: 4px;">Vorbereitung (0-99 Pkt.)</div>
+        </div>
+
+        <div class="sub-stats-grid" style="margin-top: 14px;">
+          <div class="sub-stat-box">
+            <div class="stat-label">Inner Bull (25P)</div>
+            <div class="stat-value" id="countInnerBull" style="font-size: 18px; color: #00ffa2;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">Outer Bull (10P)</div>
+            <div class="stat-value" id="countOuterBull" style="font-size: 18px; color: #00e5ff;">0</div>
+          </div>
+          <div class="sub-stat-box">
+            <div class="stat-label">Stutzen (2P)</div>
+            <div class="stat-value" id="countStutzen" style="font-size: 18px; color: #cbd5e1;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mitte: Live Steigende Raketen-Animation -->
+      <div class="stat-card target-display-card rocket-visual-card">
+        <div class="stat-label" style="color: #00e5ff; font-weight: 700;">LIVE FLUGBAHN</div>
+        
+        <div class="space-sky" id="spaceSky">
+          <div class="altitude-marker" style="bottom: 80%;">🪐 Mars Kolonie (500 Pkt.)</div>
+          <div class="altitude-marker" style="bottom: 60%;">🌕 Mond Pass (300 Pkt.)</div>
+          <div class="altitude-marker" style="bottom: 40%;">🛰️ Erdorbit (200 Pkt.)</div>
+          <div class="altitude-marker" style="bottom: 20%;">🚀 Startbereit (100 Pkt.)</div>
+          
+          <div class="rocket-ship" id="rocketShip">
+            <div class="rocket-flame" id="rocketFlame">🔥</div>
+            🚀
+          </div>
+        </div>
+
+        <div class="target-sub-info" id="altitudeText">Höhe: Startrampe (0 km)</div>
+      </div>
+
+      <!-- Rechts: Verbleibende Darts & Präzision -->
+      <div class="stat-card column-card">
+        <div class="stat-label">DARTS ÜBRIG</div>
+        <div class="stat-value" id="dartsLeft" style="font-size: 42px; color: #ffc107; margin-top: 10px;">150</div>
+        <div class="stat-label">von max. 150 Darts</div>
+
+        <div style="margin-top: 16px; background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+          <div class="stat-label">Bull-Präzision</div>
+          <div class="stat-value" id="precisionRate" style="font-size: 22px; color: #00ffa2; margin-top: 4px;">0.0%</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Letzte Würfe / Aufnahme -->
+    <div class="section-title" style="margin-top: 24px;">LETZTE WÜRFE (Klick zum Korrigieren)</div>
+    <div class="throws-grid" id="lastThrows">
+      <div class="stat-card"><div class="stat-label">Pfeil 1</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 2</div><div class="stat-value">-</div></div>
+      <div class="stat-card"><div class="stat-label">Pfeil 3</div><div class="stat-value">-</div></div>
+    </div>
+
+    <!-- KURZANLEITUNG DER REGELN -->
+    <div class="stat-card" style="margin-top: 24px; text-align: left; border-color: rgba(0, 229, 255, 0.2);">
+      <div class="stat-label" style="color: #00e5ff; margin-bottom: 12px; font-size: 14px;">📖 MARS MISSION — REGELN & WERTVORGABEN</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+        
+        <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+          <b style="color: #00ffa2;">Treibstoff & Bullseye</b><br>
+          • <b>Inner Bull (DBull / 50):</b> +25 Pkt.<br>
+          • <b>Outer Bull (SBULL / 25):</b> +10 Pkt.
+        </div>
+
+        <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+          <b style="color: #00e5ff;">Einfüllstutzen & Schrott</b><br>
+          • <b>Einfüllstutzen (1, 5, 20):</b> +2 Pkt.<br>
+          • <b>Weltraumschrott (Rest):</b> 0 Pkt.<br>
+          • <b>Miss / Fehlwürfe:</b> -2 Pkt. (Tankleck!)
+        </div>
+
+        <div style="background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+          <b style="color: #ff6565;">Das Limit (150 Darts)</b><br>
+          Erreiche 500 Punkte in maximal 150 Darts, um die Kolonie zu gründen, bevor der Treibstoff ausgeht!
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Korrektur-Modal -->
+  <div id="correctionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Wurf korrigieren</h3>
+      <p>Wähle das tatsächliche Segment:</p>
+      <select id="correctionSelect"></select>
+      <div class="modal-actions">
+        <button id="saveCorrectionBtn" class="btn-save">Speichern</button>
+        <button id="cancelCorrectionBtn" class="btn-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mission Erfolg / Ende Modal -->
+  <div id="missionModal" class="modal hidden">
+    <div class="modal-content siege-box">
+      <h2 id="missionModalTitle" style="color: #00ffa2; margin-bottom: 8px;">🚀 KOLONIE GEGRÜNDET!</h2>
+      <p id="missionModalText" style="color: #8ca1b3; font-size: 14px; margin-bottom: 16px;"></p>
+      
+      <div class="modal-actions">
+        <button class="btn-save" onclick="location.reload()">Neue Mission starten</button>
+        <button class="btn-cancel" onclick="window.location.href='rocket-stats.html'">Zur Statistik</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash Message -->
+  <div id="flashMessage" class="flash-message"></div>
+
+  <script src="rocket.js"></script>
+</body>
+</html>

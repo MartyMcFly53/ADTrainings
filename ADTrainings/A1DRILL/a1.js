@@ -606,7 +606,7 @@ function saveCorrection() {
 }
 
 // ==========================================
-// VOLLSTÄNDIGE CHRONOLOGISCHE NEUBERECHNUNG
+// VOLLSTÄNDIGE CHRONOLOGISCHE NEUBERECHNUNG (FIXED & STABLE)
 // ==========================================
 function recalculateGameFromScratch() {
     gameState.roundsCompleted = { 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, BULL: 0 };
@@ -622,18 +622,82 @@ function recalculateGameFromScratch() {
     const savedThrows = [...gameState.throws];
     gameState.throws = [];
 
-    let currentTurn = 0;
+    let totalDarts = savedThrows.length;
+    let fullTurns = Math.floor(totalDarts / 3);
+    let remainder = totalDarts % 3;
+
+    // WICHTIG: Wenn wir im Takeout-Modus sind, ist die allerletzte 3er-Gruppe 
+    // noch PENDING (wartet auf physischen Takeout) und darf das Ziel noch NICHT vorab wechseln!
+    let pendingFullTurn = (gameState.waitingForTakeout && totalDarts > 0 && remainder === 0);
+    let committedTurnsCount = pendingFullTurn ? fullTurns - 1 : fullTurns;
+    if (committedTurnsCount < 0) committedTurnsCount = 0;
+
+    function advanceTarget() {
+        do {
+            activeTargetIdx = (activeTargetIdx + 1) % TARGETS.length;
+        } while (gameState.roundsCompleted[TARGETS[activeTargetIdx]] >= 5 && !checkAllCompleted());
+    }
+
+    function checkAllCompleted() {
+        return TARGETS.every(t => gameState.roundsCompleted[t] >= 5);
+    }
+
+    // Alle vollen 3er-Aufnahmen durchgehen
+    for (let turn = 0; turn < fullTurns; turn++) {
+        let turnTargetIdx = activeTargetIdx;
+        let turnHits = 0;
+
+        for (let i = 0; i < 3; i++) {
+            let t = savedThrows[turn * 3 + i];
+            gameState.totalDarts++;
+            const hit = parseThrowValue(t.value);
+            
+            const targetHit = isTargetHit(hit, turnTargetIdx);
+            t.targetIndexAtThrow = turnTargetIdx;
+            t.targetHit = targetHit;
+
+            if (targetHit) {
+                gameState.score += hit.score;
+                turnHits++;
+                if (hit.multiplier === 1) gameState.singles++;
+                if (hit.multiplier === 2) gameState.doubles++;
+                if (hit.multiplier === 3) gameState.triples++;
+            } else {
+                gameState.misses++;
+            }
+            gameState.throws.push(t);
+        }
+
+        // Nur bereits committete Turns schalten das Ziel weiter
+        let isCommitted = (turn < committedTurnsCount);
+
+        if (isCommitted) {
+            if (turnHits >= 2) {
+                const targetName = TARGETS[turnTargetIdx];
+                if (gameState.roundsCompleted[targetName] < 5) {
+                    gameState.roundsCompleted[targetName]++;
+                }
+            }
+            if (checkAllTargetsCompleted()) {
+                gameState.gameFinished = true;
+                break;
+            }
+            advanceTarget();
+        } else {
+            // Pending Turn: Ziel bleibt exakt stehen!
+        }
+    }
+
+    // Restliche Darts (< 3) in einer laufenden Aufnahme
+    let turnTargetIdx = activeTargetIdx;
     let turnHits = 0;
-
-    savedThrows.forEach((t) => {
-        const hit = parseThrowValue(t.value);
-        if (!hit) return;
-
+    for (let i = 0; i < remainder; i++) {
+        let t = savedThrows[fullTurns * 3 + i];
         gameState.totalDarts++;
-        currentTurn++;
-
-        const targetHit = isTargetHit(hit, activeTargetIdx);
-        t.targetIndexAtThrow = activeTargetIdx;
+        const hit = parseThrowValue(t.value);
+        
+        const targetHit = isTargetHit(hit, turnTargetIdx);
+        t.targetIndexAtThrow = turnTargetIdx;
         t.targetHit = targetHit;
 
         if (targetHit) {
@@ -645,39 +709,36 @@ function recalculateGameFromScratch() {
         } else {
             gameState.misses++;
         }
-
         gameState.throws.push(t);
-
-        if (currentTurn >= 3) {
-            if (turnHits >= 2) {
-                const targetName = TARGETS[activeTargetIdx];
-                if (gameState.roundsCompleted[targetName] < 5) {
-                    gameState.roundsCompleted[targetName]++;
-                }
-            }
-            currentTurn = 0;
-            turnHits = 0;
-
-            if (checkAllTargetsCompleted()) {
-                gameState.gameFinished = true;
-                return;
-            }
-
-            do {
-                activeTargetIdx = (activeTargetIdx + 1) % TARGETS.length;
-            } while (gameState.roundsCompleted[TARGETS[activeTargetIdx]] >= 5);
-        }
-    });
+    }
 
     gameState.currentTargetIndex = activeTargetIdx;
-    gameState.currentTurnThrowsCount = currentTurn;
-    gameState.turnHitsCount = turnHits;
 
-    // Wenn genau 3 Darts in der Aufnahme sind, aktivieren wir den Takeout-Wartemodus
-    if (currentTurn === 0 && savedThrows.length > 0 && savedThrows.length % 3 === 0) {
+    if (pendingFullTurn) {
+        gameState.currentTurnThrowsCount = 3;
         gameState.waitingForTakeout = true;
-    } else {
+        let h = 0;
+        for (let i = 0; i < 3; i++) {
+            if (savedThrows[(fullTurns - 1) * 3 + i].targetHit) h++;
+        }
+        gameState.turnHitsCount = h;
+    } else if (remainder > 0) {
+        gameState.currentTurnThrowsCount = remainder;
         gameState.waitingForTakeout = false;
+        let h = 0;
+        for (let i = 0; i < remainder; i++) {
+            if (savedThrows[fullTurns * 3 + i].targetHit) h++;
+        }
+        gameState.turnHitsCount = h;
+    } else {
+        if (!gameState.waitingForTakeout) {
+            gameState.currentTurnThrowsCount = 0;
+            gameState.turnHitsCount = 0;
+        }
+    }
+
+    if (checkAllTargetsCompleted()) {
+        gameState.gameFinished = true;
     }
 
     updateUIAll();

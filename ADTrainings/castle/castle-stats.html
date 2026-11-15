@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Castle Builder Statistik - Autodarts</title>
+  <link rel="stylesheet" href="castle.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="module-header">
+      <h1>🏰 BURG-CHRONIK & STATISTIK</h1>
+      <p class="subtitle">Überlebte Belagerungen • Stabilitäts-Highscores</p>
+
+      <div class="header-actions">
+        <button class="hdr-btn btn-home" onclick="window.location.href='castle.html'">🏰 Zurück zum Bau</button>
+        <button class="hdr-btn btn-reset" onclick="resetStats()">🗑️ Chronik löschen</button>
+        <a href="../index.html" class="hdr-btn btn-home">🏠 Startseite</a>
+      </div>
+    </header>
+
+    <div id="history"></div>
+
+  </div>
+
+  <script>
+    window.onload = () => {
+        const container = document.getElementById("history");
+        let history = JSON.parse(localStorage.getItem("castleHistory") || "[]");
+
+        if (history.length === 0) {
+            container.innerHTML = "<div class='stat-card' style='color: #8ca1b3; margin-top: 30px;'>Noch keine Burgbelagerung aufgezeichnet.</div>";
+            return;
+        }
+
+        // Nach Stabilität absteigend sortieren
+        history.sort((a, b) => b.stability - a.stability);
+
+        history.forEach((entry, index) => {
+            const div = document.createElement("div");
+            div.className = "stat-card";
+            div.style.cssText = "margin-bottom: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;";
+
+            const color = entry.stability >= 70 ? "#00ffa2" : entry.stability >= 50 ? "#ffc107" : "#ff6565";
+
+            div.innerHTML = `
+                <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #00e5ff; margin-bottom: 4px;">
+                        #${index + 1} — ${entry.date} • <span style="color: #ffc107;">Modus: ${entry.difficulty} (${entry.attacker})</span>
+                    </div>
+                    <div style="font-size: 24px; font-weight: 900; color: #ffffff;">${entry.outcome}</div>
+                    <div style="font-size: 13px; color: #8ca1b3; margin-top: 6px;">
+                        Burgpunkte: <b style="color:#00ffa2;">${entry.score}</b>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
+                    <div style="font-size: 11px; color: #8ca1b3; font-weight: 600;">STABILITÄT</div>
+                    <div style="font-size: 20px; font-weight: 800; color: ${color}; margin-top: 2px;">${entry.stability}%</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    };
+
+    function resetStats() {
+        if (confirm("Wirklich die gesamte Burg-Chronik löschen?")) {
+            localStorage.removeItem("castleHistory");
+            location.reload();
+        }
+    }
+  </script>
+</body>
+</html>
