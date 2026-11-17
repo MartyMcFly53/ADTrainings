@@ -28,11 +28,9 @@
     <div id="startScreen" class="arcade-card">
       <h2 style="color: #00e5ff; margin-bottom: 18px; font-size: 20px;">SEGMENT-KONFIGURATION</h2>
       
-      <!-- 1. Zielzahl (1-20 & Bull) -->
       <div class="stat-label" style="text-align: left; margin-bottom: 8px;">1. Ziel-Segment wählen (1–20 oder Bull)</div>
       <div class="number-grid" id="targetNumberGrid"></div>
 
-      <!-- 2. Multiplikator-Filter -->
       <div class="stat-label" style="text-align: left; margin-bottom: 8px;">2. Wertungs-Modus</div>
       <div class="grid-options">
         <div class="mode-card selected" onclick="setMultiplierMode('all', this)">
@@ -49,7 +47,6 @@
         </div>
       </div>
 
-      <!-- 3. Darts-Anzahl -->
       <div class="stat-label" style="text-align: left; margin-bottom: 8px;">3. Darts-Anzahl</div>
       <div class="grid-options" style="margin-bottom: 26px;">
         <div class="mode-card selected" onclick="setLimit(30, this)">
@@ -78,56 +75,98 @@
           <div class="stat-label" id="dartsLabel">DARTS ÜBRIG</div>
           <div class="stat-value" id="dartsLeft">30</div>
           <div class="stat-label" style="margin-top: 14px;">GÜLTIGE TREFFER</div>
-          <div class="stat-value" id="validHitsDisplay" style="font-size: 32px; color: #00e5ff;">0 / 0</div>
+          <div class="stat-value" id="validHitsDisplay" style="font-size: 30px; color: #00e5ff;">0 / 0</div>
         </div>
 
         <!-- Mitte: Trefferquote & Ziel-Badge -->
         <div class="arcade-card" id="mainScoreCard" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
           <div class="target-badge" id="activeTargetBadge">ZIEL: 20 • ALL</div>
           <div class="stat-label" style="font-size: 14px;">TREFFERQUOTE</div>
-          <div class="stat-value highlight-score" id="hitRateDisplay" style="font-size: 60px;">0.0%</div>
+          <div class="stat-value highlight-score" id="hitRateDisplay" style="font-size: 58px;">0.0%</div>
           <div style="color: #ff007f; font-family: 'VT323', monospace; font-size: 22px; margin-top: 6px;" id="gameStatusInfo">Bereit für den ersten Wurf</div>
           
-          <button class="finish-btn" id="finishSessionBtn" onclick="finishAndSaveSession()">Session beenden &amp; speichern</button>
+          <button class="finish-btn" id="finishSessionBtn" onclick="manualFinishSession()">Session beenden &amp; speichern</button>
         </div>
 
-        <!-- Rechts: Gesamtpunkte & 3-Dart-Average -->
+        <!-- Rechts: Triple-Quote & 3-Dart-Average -->
         <div class="arcade-card">
-          <div class="stat-label">SEGMENT-PUNKTE</div>
-          <div class="stat-value" id="totalScore">0</div>
-          <div class="stat-label" style="margin-top: 14px;">3-DART-AVERAGE</div>
-          <div class="stat-value" id="threeDartAvg" style="font-size: 32px; color: #ffe600;">0.0</div>
+          <div class="stat-label" id="tripleRateLabel">T20-QUOTE</div>
+          <div class="stat-value" id="tripleRateDisplay" style="color: #ffe600;">0.0%</div>
+          <div class="stat-label" style="margin-top: 14px;">3-DART-AVG / PKT</div>
+          <div class="stat-value" id="threeDartAvg" style="font-size: 28px; color: #00e5ff;">0.0 (0)</div>
         </div>
 
       </div>
 
-      <!-- Single / Double / Triple Trefferanzeige -->
+      <!-- Single / Double / Triple / Misses Trefferanzeige -->
       <div class="sdt-grid">
         <div class="sdt-box single">
           <div class="stat-label" id="singleLabel">SINGLE</div>
-          <div class="stat-value" id="countSingle" style="font-size: 34px; color: #00e5ff;">0</div>
+          <div class="stat-value" id="countSingle" style="font-size: 32px; color: #00e5ff;">0</div>
         </div>
         <div class="sdt-box double">
           <div class="stat-label" id="doubleLabel">DOUBLE</div>
-          <div class="stat-value" id="countDouble" style="font-size: 34px; color: #ff007f;">0</div>
+          <div class="stat-value" id="countDouble" style="font-size: 32px; color: #ff007f;">0</div>
         </div>
         <div class="sdt-box triple">
           <div class="stat-label" id="tripleLabel">TRIPLE</div>
-          <div class="stat-value" id="countTriple" style="font-size: 34px; color: #ffe600;">0</div>
+          <div class="stat-value" id="countTriple" style="font-size: 32px; color: #ffe600;">0</div>
+        </div>
+        <div class="sdt-box misses">
+          <div class="stat-label">MISSES</div>
+          <div class="stat-value" id="countMisses" style="font-size: 32px; color: #a0a0c0;">0</div>
         </div>
       </div>
 
-      <!-- Aktuelle Aufnahme -->
+      <!-- Aktuelle Aufnahme (klickbar zur Korrektur) -->
       <div class="arcade-card">
-        <div class="stat-label">AKTUELLE AUFNAHME</div>
+        <div class="stat-label">AKTUELLE AUFNAHME (ZUM KORRIGIEREN ANKLICKEN)</div>
         <div class="throws-grid">
-          <div class="throw-box"><div class="stat-label">PFEIL 1</div><div class="stat-value" id="throw1" style="font-size: 24px;">-</div></div>
-          <div class="throw-box"><div class="stat-label">PFEIL 2</div><div class="stat-value" id="throw2" style="font-size: 24px;">-</div></div>
-          <div class="throw-box"><div class="stat-label">PFEIL 3</div><div class="stat-value" id="throw3" style="font-size: 24px;">-</div></div>
+          <div class="throw-box" id="throwBox1" onclick="openCorrectionModal(0)">
+            <div class="stat-label">PFEIL 1</div>
+            <div class="stat-value" id="throw1" style="font-size: 24px;">-</div>
+            <div class="edit-hint" id="editHint1"></div>
+          </div>
+          <div class="throw-box" id="throwBox2" onclick="openCorrectionModal(1)">
+            <div class="stat-label">PFEIL 2</div>
+            <div class="stat-value" id="throw2" style="font-size: 24px;">-</div>
+            <div class="edit-hint" id="editHint2"></div>
+          </div>
+          <div class="throw-box" id="throwBox3" onclick="openCorrectionModal(2)">
+            <div class="stat-label">PFEIL 3</div>
+            <div class="stat-value" id="throw3" style="font-size: 24px;">-</div>
+            <div class="edit-hint" id="editHint3"></div>
+          </div>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Korrektur-Modal für einzelne Pfeile -->
+  <div class="modal-backdrop" id="correctionModal">
+    <div class="modal-box">
+      <h2 style="color: #ffe600; font-size: 20px; margin-bottom: 6px;" id="corrModalTitle">PFEIL KORRIGIEREN</h2>
+      <p style="color: #a0a0c0; font-size: 13px;">Wähle den tatsächlichen Treffer für diesen Dart:</p>
+      <div class="corr-grid" id="corrButtonsGrid"></div>
+      <button class="hdr-btn" onclick="closeCorrectionModal()">Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- Endstatistik-Popup (erscheint erst nach dem Pfeileziehen!) -->
+  <div class="modal-backdrop" id="endStatsModal">
+    <div class="modal-box">
+      <div class="target-badge" id="endModalBadge">SESSION ABGESCHLOSSEN</div>
+      <h2 style="color: #ffe600; font-size: 24px; margin-bottom: 6px;">SEGMENT-AUSWERTUNG</h2>
+      <p style="color: #00e5ff; font-size: 13px;" id="endModalSub">Alle Pfeile gezogen – Ergebnis gespeichert!</p>
+      
+      <div class="summary-grid" id="endSummaryGrid"></div>
+
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px;">
+        <button class="start-btn" style="font-size: 15px; padding: 12px 24px;" onclick="window.location.href='segmenttraining-stats.html'">Zur Statistik &amp; Chart</button>
+        <button class="hdr-btn" style="padding: 12px 20px;" onclick="location.reload()">Neues Training</button>
+      </div>
+    </div>
   </div>
 
   <!-- Episches Vollbild-Overlay für 3x Triple auf Zielsegment -->
