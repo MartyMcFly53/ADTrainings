@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PowerScoring - Autodarts Arcade</title>
+  <link rel="stylesheet" href="powerscoring.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="module-header">
+      <h1>SEGMENT SCORING</h1>
+      <p class="subtitle">&gt;&gt; TARGET LOCK &amp; HIGH VOLTAGE TRAINING &lt;&lt;</p>
+
+      <div class="header-actions">
+        <div id="boardStatusBadge" class="status-ready">Board: Verbindet...</div>
+        <button class="hdr-btn" onclick="resetAutodartsBoard()">Board Reset</button>
+        <button class="hdr-btn" onclick="abortTraining()">Abbrechen</button>
+        <button class="hdr-btn" onclick="window.location.href='powerscoring-stats.html'">Statistik</button>
+        <button class="hdr-btn" onclick="changeBoardIp()">IP</button>
+        <a href="../index.html" class="hdr-btn">Startseite</a>
+      </div>
+    </header>
+
+    <!-- Startbildschirm / Konfiguration -->
+    <div id="startScreen" class="arcade-card">
+      <h2 style="color: #00e5ff; margin-bottom: 18px; font-size: 20px;">TRAININGS-KONFIGURATION</h2>
+      
+      <!-- 1. Zielzahl (1-20 & Bull) -->
+      <div class="stat-label" style="text-align: left; margin-bottom: 8px;">1. Ziel-Segment wählen (1–20 oder Bull)</div>
+      <div class="number-grid" id="targetNumberGrid"></div>
+
+      <!-- 2. Multiplikator-Filter -->
+      <div class="stat-label" style="text-align: left; margin-bottom: 8px;">2. Wertungs-Modus</div>
+      <div class="grid-options">
+        <div class="mode-card selected" onclick="setMultiplierMode('all', this)">
+          <div style="font-size: 15px; color: #ff007f;">ALL</div>
+          <div style="font-size: 11px; color: #a0a0c0; margin-top: 4px;">Single, Double &amp; Triple</div>
+        </div>
+        <div class="mode-card" onclick="setMultiplierMode('double', this)">
+          <div style="font-size: 15px; color: #ff007f;">ONLY DOUBLE</div>
+          <div style="font-size: 11px; color: #a0a0c0; margin-top: 4px;">Nur Doppel zählt</div>
+        </div>
+        <div class="mode-card" onclick="setMultiplierMode('triple', this)">
+          <div style="font-size: 15px; color: #ff007f;">ONLY TRIPLE</div>
+          <div style="font-size: 11px; color: #a0a0c0; margin-top: 4px;">Nur Triple zählt</div>
+        </div>
+      </div>
+
+      <!-- 3. Darts-Anzahl -->
+      <div class="stat-label" style="text-align: left; margin-bottom: 8px;">3. Darts-Anzahl</div>
+      <div class="grid-options" style="margin-bottom: 26px;">
+        <div class="mode-card selected" onclick="setLimit(30, this)">
+          <div style="font-size: 18px; color: #ffe600;">30 Darts</div>
+        </div>
+        <div class="mode-card" onclick="setLimit(50, this)">
+          <div style="font-size: 18px; color: #ffe600;">50 Darts</div>
+        </div>
+        <div class="mode-card" onclick="setLimit(100, this)">
+          <div style="font-size: 18px; color: #ffe600;">100 Darts</div>
+        </div>
+        <div class="mode-card" onclick="setLimit(0, this)">
+          <div style="font-size: 18px; color: #ffe600;">Endlos</div>
+        </div>
+      </div>
+
+      <button class="start-btn" onclick="startPowerGame()">Power-Session Starten</button>
+    </div>
+
+    <!-- Live Spielfeld -->
+    <div id="gameInterface" style="display: none;">
+      <div class="hud-grid">
+        
+        <!-- Links: Darts & Aufnahme-Score -->
+        <div class="arcade-card">
+          <div class="stat-label" id="dartsLabel">DARTS ÜBRIG</div>
+          <div class="stat-value" id="dartsLeft">30</div>
+          <div class="stat-label" style="margin-top: 14px;">AUFNAHME-SCORE</div>
+          <div class="stat-value" id="turnScore" style="font-size: 32px; color: #00e5ff;">0</div>
+        </div>
+
+        <!-- Mitte: Totaler Score & Ziel-Anzeige -->
+        <div class="arcade-card" id="mainScoreCard" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="target-badge" id="activeTargetBadge">ZIEL: 20 • ALL</div>
+          <div class="stat-label" style="font-size: 14px;">TOTALER POWER-SCORE</div>
+          <div class="stat-value highlight-score" id="totalScore" style="font-size: 64px;">0</div>
+          <div style="color: #ff007f; font-family: 'VT323', monospace; font-size: 22px; margin-top: 6px;" id="gameStatusInfo">Bereit für den ersten Wurf</div>
+          
+          <!-- Button zum Beenden & Speichern (besonders wichtig für Endlos-Modus) -->
+          <button class="finish-btn" id="finishSessionBtn" onclick="finishAndSaveSession()">Session beenden &amp; speichern</button>
+        </div>
+
+        <!-- Rechts: Durchschnitt & 180er -->
+        <div class="arcade-card">
+          <div class="stat-label">3-DART-AVERAGE</div>
+          <div class="stat-value" id="threeDartAvg">0.0</div>
+          <div class="stat-label" style="margin-top: 14px;">180er TREFFER</div>
+          <div class="stat-value" id="count180" style="font-size: 32px; color: #ffe600;">0</div>
+        </div>
+
+      </div>
+
+      <!-- Aktuelle Aufnahme -->
+      <div class="arcade-card">
+        <div class="stat-label">AKTUELLE AUFNAHME</div>
+        <div class="throws-grid">
+          <div class="throw-box"><div class="stat-label">PFEIL 1</div><div class="stat-value" id="throw1" style="font-size: 24px;">-</div></div>
+          <div class="throw-box"><div class="stat-label">PFEIL 2</div><div class="stat-value" id="throw2" style="font-size: 24px;">-</div></div>
+          <div class="throw-box"><div class="stat-label">PFEIL 3</div><div class="stat-value" id="throw3" style="font-size: 24px;">-</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Episches Vollbild-Overlay für 180 -->
+  <div id="epicOverlay">
+    <div class="epic-text" id="epicOverlayText">ONE HUNDRED EIGHTY!</div>
+  </div>
+
+  <div id="flashMessage" class="flash-message"></div>
+
+  <script src="powerscoring.js"></script>
+</body>
+</html>

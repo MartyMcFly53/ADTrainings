@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PowerScoring Statistik - Autodarts Arcade</title>
+  <link rel="stylesheet" href="powerscoring.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="module-header">
+      <h1>POWER SCORING HALL OF FAME</h1>
+      <p class="subtitle">&gt;&gt; HIGHSCORES &amp; SESSION CHRONIK &lt;&lt;</p>
+
+      <div class="header-actions">
+        <button class="hdr-btn" onclick="window.location.href='powerscoring.html'">Zurück zum Training</button>
+        <button class="hdr-btn" onclick="resetStats()">Chronik löschen</button>
+        <a href="../index.html" class="hdr-btn">Startseite</a>
+      </div>
+    </header>
+
+    <div id="history"></div>
+
+  </div>
+
+  <script>
+    window.onload = () => {
+      const container = document.getElementById("history");
+      const history = JSON.parse(localStorage.getItem("powerScoringHistory") || "[]");
+
+      if (history.length === 0) {
+        container.innerHTML = "<div class='arcade-card' style='color: #a0a0c0; margin-top: 20px;'>Noch keine PowerScoring-Session gespeichert. Starte dein erstes Training!</div>";
+        return;
+      }
+
+      // Nach Gesamtpunkten absteigend sortieren
+      history.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+      history.forEach((entry, index) => {
+        const div = document.createElement("div");
+        div.className = "arcade-card" + (index === 0 ? " rank-first" : "");
+        div.style.cssText = "margin-bottom: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;";
+
+        const rankColor = index === 0 ? "#ffe600" : "#00e5ff";
+
+        div.innerHTML = `
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: ${rankColor}; margin-bottom: 6px;">
+              #${index + 1} — ${entry.date} • Modus: ${entry.mode}
+            </div>
+            <div style="font-size: 14px; font-weight: 700; color: #ff007f; margin-bottom: 8px;">
+              Ziel: ${entry.target} (${entry.filter}) • 180er: ${entry.count180 || 0} • 100+: ${entry.count100Plus || 0}
+            </div>
+            <div style="font-size: 28px; font-weight: 900; color: #ffe600;">
+              ${entry.score} <span style="font-size: 14px; color: #a0a0c0;">Punkte</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(0,229,255,0.08); padding: 12px 20px; border-radius: 6px; border: 1px solid #00e5ff; text-align: right;">
+            <div style="font-size: 11px; color: #ff007f; font-weight: 700; letter-spacing: 1px;">3-DART-AVG</div>
+            <div style="font-size: 26px; font-weight: 900; color: #fff; margin-top: 2px;">${Number(entry.average || 0).toFixed(1)}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    };
+
+    function resetStats() {
+      if (confirm("Wirklich die gesamte PowerScoring-Statistik löschen?")) {
+        localStorage.removeItem("powerScoringHistory");
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
